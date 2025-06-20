@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -10,44 +10,81 @@
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
         }
-        /* Cải tiến hiển thị khối 3D */
         .dice-container {
-            perspective: 1200px; /* Tăng perspective để hiệu ứng 3D rõ hơn */
+            perspective: 1200px;
         }
         .dice {
             position: relative;
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             transform-style: preserve-3d;
-            transition: transform 1.5s ease-out;
-            /* Thêm bóng đổ để khối nổi bật */
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+            transition: transform 0.5s ease-out; /* Transition for final state */
+            transform: translateZ(-40px); 
         }
         .dice-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 1px solid #6b7280; /* Làm viền đậm hơn */
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: white;
-            color: black;
+            border: 2px solid #4b5563;
+            border-radius: 10px;
+            background-color: #f9fafb;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            box-sizing: border-box;
         }
-        /* Đây là 6 mặt của khối lập phương được định vị trong không gian 3D */
-        .face-1 { transform: rotateY(0deg) translateZ(35px); }
-        .face-2 { transform: rotateX(90deg) translateZ(35px); }
-        .face-3 { transform: rotateY(90deg) translateZ(35px); }
-        .face-4 { transform: rotateY(-90deg) translateZ(35px); }
-        .face-5 { transform: rotateX(-90deg) translateZ(35px); }
-        .face-6 { transform: rotateY(180deg) translateZ(35px); }
+        
+        .dice-face {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            place-items: center;
+            padding: 5px;
+        }
+        .dot { 
+            display: block; 
+            width: 18px; 
+            height: 18px; 
+            border-radius: 50%; 
+            background-color: #1f2937; 
+        }
 
-        .bet-btn.selected {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
+        .face-1 .dot:nth-child(1) { grid-column: 2; grid-row: 2; }
+        .face-2 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-2 .dot:nth-child(2) { grid-column: 3; grid-row: 3; }
+        .face-3 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-3 .dot:nth-child(2) { grid-column: 2; grid-row: 2; }
+        .face-3 .dot:nth-child(3) { grid-column: 3; grid-row: 3; }
+        .face-4 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-4 .dot:nth-child(2) { grid-column: 3; grid-row: 1; }
+        .face-4 .dot:nth-child(3) { grid-column: 1; grid-row: 3; }
+        .face-4 .dot:nth-child(4) { grid-column: 3; grid-row: 3; }
+        .face-5 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-5 .dot:nth-child(2) { grid-column: 3; grid-row: 1; }
+        .face-5 .dot:nth-child(3) { grid-column: 2; grid-row: 2; }
+        .face-5 .dot:nth-child(4) { grid-column: 1; grid-row: 3; }
+        .face-5 .dot:nth-child(5) { grid-column: 3; grid-row: 3; }
+        .face-6 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-6 .dot:nth-child(2) { grid-column: 3; grid-row: 1; }
+        .face-6 .dot:nth-child(3) { grid-column: 1; grid-row: 3; }
+        .face-6 .dot:nth-child(4) { grid-column: 3; grid-row: 3; }
+        .face-6 .dot:nth-child(5) { grid-column: 1; grid-row: 2; }
+        .face-6 .dot:nth-child(6) { grid-column: 3; grid-row: 2; }
+
+        .face-1 { transform: rotateY(0deg) translateZ(40px); }
+        .face-2 { transform: rotateX(90deg) translateZ(40px); }
+        .face-3 { transform: rotateY(-90deg) translateZ(40px); }
+        .face-4 { transform: rotateY(90deg) translateZ(40px); }
+        .face-5 { transform: rotateX(-90deg) translateZ(40px); }
+        .face-6 { transform: rotateY(180deg) translateZ(40px); }
+        
+        .bet-btn.selected { transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); }
+
+        @keyframes tumble {
+            0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+            100% { transform: rotateX(1080deg) rotateY(720deg) rotateZ(1440deg); }
+        }
+        .is-rolling {
+            animation: tumble 1.5s cubic-bezier(0.5, 0, 0.5, 1);
         }
     </style>
 </head>
@@ -76,7 +113,6 @@
         </div>
         <hr class="mb-4 border-gray-300 dark:border-gray-600">
 
-
         <!-- Betting Area -->
         <div class="mb-6">
             <h2 class="text-xl font-bold text-center mb-4 dark:text-white">1. Chọn cửa của bạn</h2>
@@ -95,7 +131,9 @@
         <!-- Dice and Roll Button -->
         <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-xl mb-6">
              <h2 class="text-xl font-bold text-center mb-4 dark:text-white">2. Lắc xúc xắc</h2>
-            <div class="flex justify-center items-center gap-8 mb-4 min-h-[70px]">
+            <!-- *** BẮT ĐẦU THAY ĐỔI: Tăng chiều cao tối thiểu của khu vực này *** -->
+            <div class="flex justify-center items-center gap-12 mb-4 min-h-[140px]">
+            <!-- *** KẾT THÚC THAY ĐỔI *** -->
                 <div class="dice-container">
                     <div id="dice1" class="dice"></div>
                 </div>
@@ -136,20 +174,19 @@
         const computerScoreEl = document.getElementById('computer-score');
 
         // --- Game State ---
-        let playerBet = null; // 'small' or 'large'
-        let history = [];
-        let playerScore = 0;
-        let computerScore = 0;
+        let playerBet = null, history = [], playerScore = 0, computerScore = 0;
+        
+        function getDiceHTML() {
+            return `
+                <div class="dice-face face-1">${'<span class="dot"></span>'.repeat(1)}</div>
+                <div class="dice-face face-2">${'<span class="dot"></span>'.repeat(2)}</div>
+                <div class="dice-face face-3">${'<span class="dot"></span>'.repeat(3)}</div>
+                <div class="dice-face face-4">${'<span class="dot"></span>'.repeat(4)}</div>
+                <div class="dice-face face-5">${'<span class="dot"></span>'.repeat(5)}</div>
+                <div class="dice-face face-6">${'<span class="dot"></span>'.repeat(6)}</div>
+            `;
+        }
 
-        // --- Dice Face HTML and Rotations ---
-        const diceFaceHTML = `
-            <div class="dice-face face-1"><span class="text-4xl">⚀</span></div>
-            <div class="dice-face face-2"><span class="text-4xl">⚁</span></div>
-            <div class="dice-face face-3"><span class="text-4xl">⚂</span></div>
-            <div class="dice-face face-4"><span class="text-4xl">⚃</span></div>
-            <div class="dice-face face-5"><span class="text-4xl">⚄</span></div>
-            <div class="dice-face face-6"><span class="text-4xl">⚅</span></div>
-        `;
         const diceRotations = {
             1: 'rotateY(0deg) rotateX(0deg)',
             2: 'rotateX(-90deg) rotateY(0deg)',
@@ -159,33 +196,28 @@
             6: 'rotateY(180deg) rotateX(0deg)'
         };
 
-        // --- Initial Setup ---
         function setupDice() {
-            dice1El.innerHTML = diceFaceHTML;
-            dice2El.innerHTML = diceFaceHTML;
+            dice1El.innerHTML = getDiceHTML();
+            dice2El.innerHTML = getDiceHTML();
             dice1El.style.transform = diceRotations[1];
             dice2El.style.transform = diceRotations[1];
         }
 
-        // --- Event Listeners ---
         betSmallBtn.addEventListener('click', () => selectBet('small'));
         betLargeBtn.addEventListener('click', () => selectBet('large'));
         rollBtn.addEventListener('click', handleRoll);
         resetBtn.addEventListener('click', resetGame);
 
-        // --- Functions ---
         function selectBet(bet) {
             playerBet = bet;
             rollBtn.disabled = false;
             resultText.textContent = `Bạn đã cược ${bet === 'small' ? 'NHỎ' : 'LỚN'}. Hãy lắc xúc xắc!`;
-            
-            betSmallBtn.classList.remove('selected', 'ring-4', 'ring-blue-400');
-            betLargeBtn.classList.remove('selected', 'ring-4', 'ring-red-400');
-            if (bet === 'small') {
-                betSmallBtn.classList.add('selected', 'ring-4', 'ring-blue-400');
-            } else {
-                betLargeBtn.classList.add('selected', 'ring-4', 'ring-red-400');
-            }
+            betSmallBtn.classList.toggle('selected', bet === 'small');
+            betSmallBtn.classList.toggle('ring-4', bet === 'small');
+            betSmallBtn.classList.toggle('ring-blue-400', bet === 'small');
+            betLargeBtn.classList.toggle('selected', bet === 'large');
+            betLargeBtn.classList.toggle('ring-4', bet === 'large');
+            betLargeBtn.classList.toggle('ring-red-400', bet === 'large');
         }
 
         function handleRoll() {
@@ -195,16 +227,14 @@
             betSmallBtn.disabled = true;
             betLargeBtn.disabled = true;
             resultText.textContent = 'Đang lắc...';
-
-            const randomX1 = (Math.floor(Math.random() * 8) + 4) * 360;
-            const randomY1 = (Math.floor(Math.random() * 8) + 4) * 360;
-            dice1El.style.transform = `rotateX(${randomX1}deg) rotateY(${randomY1}deg)`;
-
-            const randomX2 = (Math.floor(Math.random() * 8) + 4) * 360;
-            const randomY2 = (Math.floor(Math.random() * 8) + 4) * 360;
-            dice2El.style.transform = `rotateX(${randomX2}deg) rotateY(${randomY2}deg)`;
-
+            
+            dice1El.classList.add('is-rolling');
+            dice2El.classList.add('is-rolling');
+            
             setTimeout(() => {
+                dice1El.classList.remove('is-rolling');
+                dice2El.classList.remove('is-rolling');
+            
                 const val1 = Math.floor(Math.random() * 6) + 1;
                 const val2 = Math.floor(Math.random() * 6) + 1;
                 const diff = Math.abs(val1 - val2);
@@ -215,34 +245,22 @@
 
                 const playerWins = (playerBet === outcome);
                 
-                // Update scores
-                if (playerWins) {
-                    playerScore++;
-                } else {
-                    computerScore++;
-                }
+                if (playerWins) playerScore++; else computerScore++;
                 playerScoreEl.textContent = playerScore;
                 computerScoreEl.textContent = computerScore;
 
                 let resultHTML = `Xúc xắc: <span class="font-bold">${val1}</span>, <span class="font-bold">${val2}</span>. Hiệu: <span class="font-bold">${diff}</span> &rArr; <span class="font-bold">${outcome === 'small' ? 'NHỎ' : 'LỚN'}</span>.`;
-                if (playerWins) {
-                    resultHTML += `<br><span class="text-2xl font-bold text-green-500">🎉 BẠN THẮNG! 🎉</span>`;
-                } else {
-                    resultHTML += `<br><span class="text-2xl font-bold text-red-500">😥 BẠN THUA! 😥</span>`;
-                }
+                resultHTML += playerWins ? `<br><span class="text-2xl font-bold text-green-500">🎉 BẠN THẮNG! 🎉</span>` : `<br><span class="text-2xl font-bold text-red-500">😥 BẠN THUA! 😥</span>`;
                 resultText.innerHTML = resultHTML;
                 
                 addToHistory({ val1, val2, diff, outcome, playerBet, playerWins });
                 resetForNextRound();
-
             }, 1500);
         }
 
         function addToHistory(logEntry) {
             history.unshift(logEntry);
-            if (history.length > 20) {
-                history.pop();
-            }
+            if (history.length > 20) history.pop();
             updateHistoryLog();
         }
         
@@ -251,19 +269,12 @@
                 historyLog.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Chưa có lịch sử.</p>';
                 return;
             }
-            
             historyLog.innerHTML = history.map((log, index) => {
                 const outcomeClass = log.outcome === 'small' ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-red-100 dark:bg-red-900/50';
                 const winClass = log.playerWins ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                return `
-                    <div class="p-2 rounded ${outcomeClass}">
-                        <span class="font-bold">#${history.length - index}</span>:
-                        Xúc xắc (${log.val1}, ${log.val2}).
-                        Hiệu: <strong>${log.diff}</strong> (${log.outcome.toUpperCase()}).
-                        Bạn cược ${log.playerBet.toUpperCase()}.
-                        <strong class="${winClass}">${log.playerWins ? 'Thắng' : 'Thua'}</strong>
-                    </div>
-                `;
+                const outcomeText = log.outcome === 'small' ? 'NHỎ' : 'LỚN';
+                const playerBetText = log.playerBet === 'small' ? 'NHỎ' : 'LỚN';
+                return `<div class="p-2 rounded ${outcomeClass}"><span class="font-bold">#${history.length - index}</span>: Xúc xắc (${log.val1}, ${log.val2}). Hiệu: <strong>${log.diff}</strong> (${outcomeText}). Bạn cược ${playerBetText}. <strong class="${winClass}">${log.playerWins ? 'Thắng' : 'Thua'}</strong></div>`;
             }).join('');
         }
         
@@ -271,28 +282,22 @@
             playerBet = null;
             betSmallBtn.disabled = false;
             betLargeBtn.disabled = false;
-            betSmallBtn.classList.remove('selected', 'ring-4', 'ring-blue-400');
-            betLargeBtn.classList.remove('selected', 'ring-4', 'ring-red-400');
+            selectBet(null);
         }
 
         function resetGame() {
             playerScore = 0;
             computerScore = 0;
             history = [];
-            
             playerScoreEl.textContent = '0';
             computerScoreEl.textContent = '0';
             resultText.innerHTML = '<p class="text-xl font-bold dark:text-gray-300">Hãy đặt cược để bắt đầu!</p>';
-            
             updateHistoryLog();
             resetForNextRound();
             setupDice();
         }
 
-        // --- Start the game ---
         setupDice();
-
     </script>
 </body>
 </html>
-
