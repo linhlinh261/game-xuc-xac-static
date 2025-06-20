@@ -18,9 +18,7 @@
             width: 80px;
             height: 80px;
             transform-style: preserve-3d;
-            /* *** BẮT ĐẦU SỬA LỖI: Thêm tiền tố cho trình duyệt cũ *** */
             -webkit-transform-style: preserve-3d; 
-            transform: translateZ(-40px);
         }
         .dice-face {
             position: absolute;
@@ -76,23 +74,6 @@
         .face-6 { transform: rotateY(180deg) translateZ(40px); }
         
         .bet-btn.selected { transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); }
-        
-        /* *** BẮT ĐẦU SỬA LỖI: Giữ nguyên vị trí Z trong hoạt ảnh *** */
-        @keyframes tumble1 {
-            from { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
-            to { transform: translateZ(-40px) rotateX(1080deg) rotateY(720deg) rotateZ(1440deg); }
-        }
-        @keyframes tumble2 {
-            from { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
-            to { transform: translateZ(-40px) rotateX(720deg) rotateY(1440deg) rotateZ(1080deg); }
-        }
-        .is-rolling-1 {
-            animation: tumble1 1.5s linear;
-        }
-        .is-rolling-2 {
-            animation: tumble2 1.5s linear;
-        }
-        /* *** KẾT THÚC SỬA LỖI *** */
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
@@ -107,7 +88,6 @@
             <p class="mb-4 text-gray-600 dark:text-gray-400">Chọn nguyện vọng và thử vận may của bạn!</p>
         </div>
         
-        <!-- Scoreboard -->
         <div class="grid grid-cols-2 gap-4 text-center mb-4">
             <div>
                 <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300">ĐIỂM CỦA BẠN</h2>
@@ -120,7 +100,6 @@
         </div>
         <hr class="mb-4 border-gray-300 dark:border-gray-600">
 
-        <!-- Betting Area -->
         <div class="mb-6">
             <h2 class="text-xl font-bold text-center mb-4 dark:text-white">1. Chọn nguyện vọng của bạn</h2>
             <div class="grid grid-cols-2 gap-4">
@@ -135,7 +114,6 @@
             </div>
         </div>
         
-        <!-- Dice and Roll Button -->
         <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-xl mb-6">
              <h2 class="text-xl font-bold text-center mb-4 dark:text-white">2. Lắc xúc xắc</h2>
             <div class="flex justify-center items-center gap-12 mb-4 min-h-[140px]">
@@ -151,12 +129,10 @@
             </button>
         </div>
         
-        <!-- Result Area -->
         <div id="result-area" class="text-center min-h-[80px] p-4 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6">
              <p id="result-text" class="text-xl font-bold dark:text-gray-300">Hãy đặt cược để bắt đầu!</p>
         </div>
 
-        <!-- History Area -->
         <div>
             <h2 class="text-xl font-bold text-center mb-4 dark:text-white">Lịch sử các lần gieo</h2>
             <div id="history-log" class="max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-700 p-3 rounded-lg space-y-2">
@@ -179,7 +155,7 @@
         const computerScoreEl = document.getElementById('computer-score');
 
         // --- Game State ---
-        let playerBet = null, history = [], playerScore = 0, computerScore = 0;
+        let playerBet = null, history = [], playerScore = 0, computerScore = 0, isRolling = false;
         
         function getDiceHTML() {
             return `
@@ -204,7 +180,6 @@
         function setupDice() {
             dice1El.innerHTML = getDiceHTML();
             dice2El.innerHTML = getDiceHTML();
-            // Đặt lại vị trí ban đầu một cách tường minh
             dice1El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
             dice2El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
         }
@@ -215,6 +190,7 @@
         resetBtn.addEventListener('click', resetGame);
 
         function selectBet(bet) {
+            if (isRolling) return;
             playerBet = bet;
             rollBtn.disabled = false;
             resultText.textContent = `Bạn đã cược ${bet === 'small' ? 'NHỎ' : 'LỚN'}. Hãy lắc xúc xắc!`;
@@ -226,36 +202,56 @@
             betLargeBtn.classList.toggle('ring-red-400', bet === 'large');
         }
 
+        // *** BẮT ĐẦU SỬA LỖI: Hoạt ảnh bằng requestAnimationFrame ***
         function handleRoll() {
-            if (!playerBet) return;
+            if (!playerBet || isRolling) return;
 
+            isRolling = true;
             rollBtn.disabled = true;
             betSmallBtn.disabled = true;
             betLargeBtn.disabled = true;
             resultText.textContent = 'Đang lắc...';
             
-            dice1El.style.transform = ''; // Xóa transform cũ để animation hoạt động
-            dice2El.style.transform = '';
+            const duration = 1500;
+            let startTime = null;
 
-            dice1El.classList.add('is-rolling-1');
-            dice2El.classList.add('is-rolling-2');
-            
-            dice1El.addEventListener('animationend', onAnimationEnd, { once: true });
+            const speed1 = { x: (Math.random() + 0.5) * 10, y: (Math.random() + 0.5) * 10, z: (Math.random() + 0.5) * 10 };
+            const speed2 = { x: (Math.random() + 0.5) * 10, y: (Math.random() + 0.5) * 10, z: (Math.random() + 0.5) * 10 };
+
+            function animate(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                
+                const progress = elapsed / duration;
+
+                const rotateX1 = progress * 360 * speed1.x;
+                const rotateY1 = progress * 360 * speed1.y;
+                const rotateZ1 = progress * 360 * speed1.z;
+
+                const rotateX2 = progress * 360 * speed2.x;
+                const rotateY2 = progress * 360 * speed2.y;
+                const rotateZ2 = progress * 360 * speed2.z;
+
+                dice1El.style.transform = `translateZ(-40px) rotateX(${rotateX1}deg) rotateY(${rotateY1}deg) rotateZ(${rotateZ1}deg)`;
+                dice2El.style.transform = `translateZ(-40px) rotateX(${rotateX2}deg) rotateY(${rotateY2}deg) rotateZ(${rotateZ2}deg)`;
+
+                if (elapsed < duration) {
+                    requestAnimationFrame(animate);
+                } else {
+                    showFinalResult();
+                }
+            }
+            requestAnimationFrame(animate);
         }
 
-        function onAnimationEnd() {
-            dice1El.classList.remove('is-rolling-1');
-            dice2El.classList.remove('is-rolling-2');
-        
+        function showFinalResult() {
             const val1 = Math.floor(Math.random() * 6) + 1;
             const val2 = Math.floor(Math.random() * 6) + 1;
             const diff = Math.abs(val1 - val2);
             const outcome = (diff <= 2) ? 'small' : 'large';
 
-            // *** BẮT ĐẦU SỬA LỖI: Đặt lại transform với vị trí Z cố định ***
             dice1El.style.transform = `translateZ(-40px) ${diceRotations[val1]}`;
             dice2El.style.transform = `translateZ(-40px) ${diceRotations[val2]}`;
-            // *** KẾT THÚC SỬA LỖI ***
 
             const playerWins = (playerBet === outcome);
             
@@ -270,6 +266,7 @@
             addToHistory({ val1, val2, diff, outcome, playerBet, playerWins });
             resetForNextRound();
         }
+        // *** KẾT THÚC SỬA LỖI ***
 
         function addToHistory(logEntry) {
             history.unshift(logEntry);
@@ -293,12 +290,14 @@
         
         function resetForNextRound() {
             playerBet = null;
+            isRolling = false;
             betSmallBtn.disabled = false;
             betLargeBtn.disabled = false;
             selectBet(null);
         }
 
         function resetGame() {
+            if (isRolling) return;
             playerScore = 0;
             computerScore = 0;
             history = [];
