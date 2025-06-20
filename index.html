@@ -18,7 +18,7 @@
             width: 80px;
             height: 80px;
             transform-style: preserve-3d;
-            transform: translateZ(-40px); 
+            /* *** BẮT ĐẦU THAY ĐỔI: Xóa transform ở đây để JS kiểm soát hoàn toàn *** */
         }
         .dice-face {
             position: absolute;
@@ -75,20 +75,20 @@
         
         .bet-btn.selected { transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); }
         
-        /* *** BẮT ĐẦU THAY ĐỔI *** */
+        /* *** BẮT ĐẦU THAY ĐỔI: Thêm tâm xoay vào hoạt ảnh *** */
         @keyframes tumble1 {
-            from { transform: rotateX(0) rotateY(0) rotateZ(0); }
-            to { transform: rotateX(1080deg) rotateY(720deg) rotateZ(1440deg); }
+            from { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
+            to { transform: translateZ(-40px) rotateX(1080deg) rotateY(720deg) rotateZ(1440deg); }
         }
         @keyframes tumble2 {
-            from { transform: rotateX(0) rotateY(0) rotateZ(0); }
-            to { transform: rotateX(720deg) rotateY(1440deg) rotateZ(1080deg); }
+            from { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
+            to { transform: translateZ(-40px) rotateX(720deg) rotateY(1440deg) rotateZ(1080deg); }
         }
         .is-rolling-1 {
-            animation: tumble1 1.5s linear; /* Đổi thành linear */
+            animation: tumble1 1.5s linear;
         }
         .is-rolling-2 {
-            animation: tumble2 1.5s linear; /* Đổi thành linear */
+            animation: tumble2 1.5s linear;
         }
         /* *** KẾT THÚC THAY ĐỔI *** */
     </style>
@@ -190,14 +190,17 @@
             `;
         }
 
+        // *** BẮT ĐẦU THAY ĐỔI: Thêm tâm xoay vào các giá trị transform ***
+        const baseTransform = 'translateZ(-40px)';
         const diceRotations = {
-            1: 'rotateY(0deg) rotateX(0deg)',
-            2: 'rotateX(-90deg) rotateY(0deg)',
-            3: 'rotateY(90deg) rotateX(0deg)',
-            4: 'rotateY(-90deg) rotateX(0deg)',
-            5: 'rotateX(90deg) rotateY(0deg)',
-            6: 'rotateY(180deg) rotateX(0deg)'
+            1: `${baseTransform} rotateY(0deg) rotateX(0deg)`,
+            2: `${baseTransform} rotateX(90deg) rotateY(0deg)`,
+            3: `${baseTransform} rotateY(90deg) rotateX(0deg)`,
+            4: `${baseTransform} rotateY(-90deg) rotateX(0deg)`,
+            5: `${baseTransform} rotateX(-90deg) rotateY(0deg)`,
+            6: `${baseTransform} rotateY(180deg) rotateX(0deg)`
         };
+        // *** KẾT THÚC THAY ĐỔI ***
 
         function setupDice() {
             dice1El.innerHTML = getDiceHTML();
@@ -231,6 +234,10 @@
             betLargeBtn.disabled = true;
             resultText.textContent = 'Đang lắc...';
             
+            // Xóa transform inline để animation có thể ghi đè đúng
+            dice1El.style.transform = '';
+            dice2El.style.transform = '';
+
             dice1El.classList.add('is-rolling-1');
             dice2El.classList.add('is-rolling-2');
             
