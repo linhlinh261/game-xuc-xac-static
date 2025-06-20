@@ -1,1 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Xúc Xắc - Đấu Với Máy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        .dice {
+            transition: transform 0.5s ease-out;
+        }
+        .dice-container {
+            perspective: 1000px;
+        }
+        .dice-face {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .face-front { transform: translateZ(35px); }
+        .face-back { transform: rotateY(180deg) translateZ(35px); }
+        .face-right { transform: rotateY(90deg) translateZ(35px); }
+        .face-left { transform: rotateY(-90deg) translateZ(35px); }
+        .face-top { transform: rotateX(90deg) translateZ(35px); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(35px); }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg text-center">
+        
+        <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">Game Xúc Xắc</h1>
+        <p class="mb-6 text-gray-600 dark:text-gray-400">Thử vận may của bạn với máy!</p>
+
+        <div id="game-area" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <!-- Player's Area -->
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4">Bạn</h2>
+                <div class="dice-container w-20 h-20 mx-auto mb-4">
+                    <div id="player-dice" class="dice relative w-full h-full transform-style-3d">
+                        <!-- Dice faces will be generated here -->
+                    </div>
+                </div>
+                <p class="text-lg">Điểm: <span id="player-score" class="font-bold text-2xl text-green-500">0</span></p>
+            </div>
+
+            <!-- Computer's Area -->
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4">Máy</h2>
+                 <div class="dice-container w-20 h-20 mx-auto mb-4">
+                    <div id="computer-dice" class="dice relative w-full h-full transform-style-3d">
+                        <!-- Dice faces will be generated here -->
+                    </div>
+                </div>
+                <p class="text-lg">Điểm: <span id="computer-score" class="font-bold text-2xl text-red-500">0</span></p>
+            </div>
+        </div>
+
+        <div id="result" class="mt-6 text-2xl font-bold min-h-[40px] flex items-center justify-center"></div>
+
+        <div class="mt-8">
+            <button id="roll-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800">
+                🎲 Lắc Xúc Xắc
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const playerDiceEl = document.getElementById('player-dice');
+        const computerDiceEl = document.getElementById('computer-dice');
+        const playerScoreEl = document.getElementById('player-score');
+        const computerScoreEl = document.getElementById('computer-score');
+        const resultEl = document.getElementById('result');
+        const rollBtn = document.getElementById('roll-btn');
+
+        const diceFaces = [
+            // front
+            '<div class="absolute w-full h-full border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-white dark:bg-gray-800 dice-face face-front"><span class="text-4xl">⚀</span></div>',
+            // back
+            '<div class="absolute w-full h-full border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-white dark:bg-gray-800 dice-face face-back"><span class="text-4xl">⚅</span></div>',
+            // top
+            '<div class="absolute w-full h-full border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-white dark:bg-gray-800 dice-face face-top"><span class="text-4xl">⚄</span></div>',
+            // bottom
+            '<div class="absolute w-full h-full border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-white dark:bg-gray-800 dice-face face-bottom"><span class="text-4xl">⚁</span></div>',
+            // right
+            '<div class="absolute w-full h-full border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-white dark:bg-gray-800 dice-face face-right"><span class="text-4xl">⚂</span></div>',
+            // left
+            '<div class="absolute w-full h-full border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-white dark:bg-gray-800 dice-face face-left"><span class="text-4xl">⚃</span></div>'
+        ];
+        
+        playerDiceEl.innerHTML = diceFaces.join('');
+        computerDiceEl.innerHTML = diceFaces.join('');
+
+        const diceRotations = {
+            1: 'rotateX(0deg) rotateY(0deg)',
+            2: 'rotateX(-90deg) rotateY(0deg)',
+            3: 'rotateX(0deg) rotateY(-90deg)',
+            4: 'rotateX(0deg) rotateY(90deg)',
+            5: 'rotateX(90deg) rotateY(0deg)',
+            6: 'rotateX(0deg) rotateY(180deg)'
+        };
+
+        rollBtn.addEventListener('click', () => {
+            rollBtn.disabled = true;
+            resultEl.textContent = 'Đang lắc...';
+            resultEl.className = 'mt-6 text-2xl font-bold text-gray-500 min-h-[40px] flex items-center justify-center';
+
+            // Add animation class
+            playerDiceEl.style.transition = 'transform 1.5s ease-out';
+            computerDiceEl.style.transition = 'transform 1.5s ease-out';
+            
+            // Random spinning effect
+            const randomXPlayer = (Math.floor(Math.random() * 8) + 4) * 360;
+            const randomYPlayer = (Math.floor(Math.random() * 8) + 4) * 360;
+            const randomZPlayer = (Math.floor(Math.random() * 8) + 4) * 360;
+            playerDiceEl.style.transform = `rotateX(${randomXPlayer}deg) rotateY(${randomYPlayer}deg) rotateZ(${randomZPlayer}deg)`;
+            
+            const randomXComputer = (Math.floor(Math.random() * 8) + 4) * 360;
+            const randomYComputer = (Math.floor(Math.random() * 8) + 4) * 360;
+            const randomZComputer = (Math.floor(Math.random() * 8) + 4) * 360;
+            computerDiceEl.style.transform = `rotateX(${randomXComputer}deg) rotateY(${randomYComputer}deg) rotateZ(${randomZComputer}deg)`;
+
+
+            setTimeout(() => {
+                const playerScore = Math.floor(Math.random() * 6) + 1;
+                const computerScore = Math.floor(Math.random() * 6) + 1;
+
+                playerScoreEl.textContent = playerScore;
+                computerScoreEl.textContent = computerScore;
+
+                playerDiceEl.style.transform = diceRotations[playerScore];
+                computerDiceEl.style.transform = diceRotations[computerScore];
+
+                if (playerScore > computerScore) {
+                    resultEl.textContent = '🎉 Bạn Thắng! 🎉';
+                    resultEl.className = 'mt-6 text-2xl font-bold text-green-500 min-h-[40px] flex items-center justify-center';
+                } else if (computerScore > playerScore) {
+                    resultEl.textContent = '😥 Máy Thắng! 😥';
+                    resultEl.className = 'mt-6 text-2xl font-bold text-red-500 min-h-[40px] flex items-center justify-center';
+                } else {
+                    resultEl.textContent = '😐 Hòa! 😐';
+                    resultEl.className = 'mt-6 text-2xl font-bold text-yellow-500 min-h-[40px] flex items-center justify-center';
+                }
+                rollBtn.disabled = false;
+            }, 1500);
+        });
+        
+        // Initial state
+        playerDiceEl.style.transform = diceRotations[1];
+        computerDiceEl.style.transform = diceRotations[1];
+    </script>
+</body>
+</html>
 
