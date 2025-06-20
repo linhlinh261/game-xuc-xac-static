@@ -18,7 +18,8 @@
             width: 80px;
             height: 80px;
             transform-style: preserve-3d;
-            /* *** BẮT ĐẦU SỬA LỖI: Đặt transform cố định ở đây *** */
+            /* *** BẮT ĐẦU SỬA LỖI: Thêm tiền tố cho trình duyệt cũ *** */
+            -webkit-transform-style: preserve-3d; 
             transform: translateZ(-40px);
         }
         .dice-face {
@@ -76,14 +77,14 @@
         
         .bet-btn.selected { transform: scale(1.05); box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); }
         
-        /* *** BẮT ĐẦU SỬA LỖI: Hoạt ảnh chỉ xoay, không di chuyển *** */
+        /* *** BẮT ĐẦU SỬA LỖI: Giữ nguyên vị trí Z trong hoạt ảnh *** */
         @keyframes tumble1 {
-            from { transform: rotateX(0) rotateY(0) rotateZ(0); }
-            to { transform: rotateX(1080deg) rotateY(720deg) rotateZ(1440deg); }
+            from { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
+            to { transform: translateZ(-40px) rotateX(1080deg) rotateY(720deg) rotateZ(1440deg); }
         }
         @keyframes tumble2 {
-            from { transform: rotateX(0) rotateY(0) rotateZ(0); }
-            to { transform: rotateX(720deg) rotateY(1440deg) rotateZ(1080deg); }
+            from { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
+            to { transform: translateZ(-40px) rotateX(720deg) rotateY(1440deg) rotateZ(1080deg); }
         }
         .is-rolling-1 {
             animation: tumble1 1.5s linear;
@@ -203,7 +204,9 @@
         function setupDice() {
             dice1El.innerHTML = getDiceHTML();
             dice2El.innerHTML = getDiceHTML();
-            // Ban đầu không cần set transform vì CSS đã lo
+            // Đặt lại vị trí ban đầu một cách tường minh
+            dice1El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
+            dice2El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
         }
 
         betSmallBtn.addEventListener('click', () => selectBet('small'));
@@ -231,8 +234,7 @@
             betLargeBtn.disabled = true;
             resultText.textContent = 'Đang lắc...';
             
-            // Xóa transform inline để animation có thể ghi đè đúng
-            dice1El.style.transform = '';
+            dice1El.style.transform = ''; // Xóa transform cũ để animation hoạt động
             dice2El.style.transform = '';
 
             dice1El.classList.add('is-rolling-1');
@@ -250,9 +252,9 @@
             const diff = Math.abs(val1 - val2);
             const outcome = (diff <= 2) ? 'small' : 'large';
 
-            // *** BẮT ĐẦU SỬA LỖI: Chỉ set phần xoay, giữ nguyên translateZ từ CSS ***
-            dice1El.style.transform = diceRotations[val1];
-            dice2El.style.transform = diceRotations[val2];
+            // *** BẮT ĐẦU SỬA LỖI: Đặt lại transform với vị trí Z cố định ***
+            dice1El.style.transform = `translateZ(-40px) ${diceRotations[val1]}`;
+            dice2El.style.transform = `translateZ(-40px) ${diceRotations[val2]}`;
             // *** KẾT THÚC SỬA LỖI ***
 
             const playerWins = (playerBet === outcome);
