@@ -168,14 +168,16 @@
             `;
         }
 
+        // *** BẮT ĐẦU SỬA LỖI: Sửa lại ánh xạ xoay cho đúng ***
         const diceRotations = {
             1: 'rotateY(0deg) rotateX(0deg)',
-            2: 'rotateX(90deg) rotateY(0deg)',
-            3: 'rotateY(90deg) rotateX(0deg)',
-            4: 'rotateY(-90deg) rotateX(0deg)',
-            5: 'rotateX(-90deg) rotateY(0deg)',
+            2: 'rotateX(-90deg) rotateY(0deg)',
+            3: 'rotateY(-90deg) rotateX(0deg)',
+            4: 'rotateY(90deg) rotateX(0deg)',
+            5: 'rotateX(90deg) rotateY(0deg)',
             6: 'rotateY(180deg) rotateX(0deg)'
         };
+        // *** KẾT THÚC SỬA LỖI ***
 
         function setupDice() {
             dice1El.innerHTML = getDiceHTML();
@@ -192,17 +194,22 @@
         function selectBet(bet) {
             if (isRolling) return;
             playerBet = bet;
-            rollBtn.disabled = false;
-            resultText.textContent = `Bạn đã cược ${bet === 'small' ? 'NHỎ' : 'LỚN'}. Hãy lắc xúc xắc!`;
+            
             betSmallBtn.classList.toggle('selected', bet === 'small');
             betSmallBtn.classList.toggle('ring-4', bet === 'small');
             betSmallBtn.classList.toggle('ring-blue-400', bet === 'small');
             betLargeBtn.classList.toggle('selected', bet === 'large');
             betLargeBtn.classList.toggle('ring-4', bet === 'large');
             betLargeBtn.classList.toggle('ring-red-400', bet === 'large');
+
+            if (bet) {
+                rollBtn.disabled = false;
+                resultText.textContent = `Bạn đã cược ${bet === 'small' ? 'NHỎ' : 'LỚN'}. Hãy lắc xúc xắc!`;
+            } else {
+                rollBtn.disabled = true;
+            }
         }
 
-        // *** BẮT ĐẦU SỬA LỖI: Hoạt ảnh bằng requestAnimationFrame ***
         function handleRoll() {
             if (!playerBet || isRolling) return;
 
@@ -215,25 +222,15 @@
             const duration = 1500;
             let startTime = null;
 
-            const speed1 = { x: (Math.random() + 0.5) * 10, y: (Math.random() + 0.5) * 10, z: (Math.random() + 0.5) * 10 };
-            const speed2 = { x: (Math.random() + 0.5) * 10, y: (Math.random() + 0.5) * 10, z: (Math.random() + 0.5) * 10 };
-
             function animate(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
                 
-                const progress = elapsed / duration;
+                const rotate1 = (elapsed / duration) * 360 * 10;
+                const rotate2 = (elapsed / duration) * 360 * 12;
 
-                const rotateX1 = progress * 360 * speed1.x;
-                const rotateY1 = progress * 360 * speed1.y;
-                const rotateZ1 = progress * 360 * speed1.z;
-
-                const rotateX2 = progress * 360 * speed2.x;
-                const rotateY2 = progress * 360 * speed2.y;
-                const rotateZ2 = progress * 360 * speed2.z;
-
-                dice1El.style.transform = `translateZ(-40px) rotateX(${rotateX1}deg) rotateY(${rotateY1}deg) rotateZ(${rotateZ1}deg)`;
-                dice2El.style.transform = `translateZ(-40px) rotateX(${rotateX2}deg) rotateY(${rotateY2}deg) rotateZ(${rotateZ2}deg)`;
+                dice1El.style.transform = `translateZ(-40px) rotateX(${rotate1}deg) rotateY(${rotate1}deg) rotateZ(${rotate1}deg)`;
+                dice2El.style.transform = `translateZ(-40px) rotateX(${rotate2}deg) rotateY(${rotate2}deg) rotateZ(${rotate2}deg)`;
 
                 if (elapsed < duration) {
                     requestAnimationFrame(animate);
@@ -260,13 +257,12 @@
             computerScoreEl.textContent = computerScore;
 
             let resultHTML = `Xúc xắc: <span class="font-bold">${val1}</span>, <span class="font-bold">${val2}</span>. Hiệu: <span class="font-bold">${diff}</span> &rArr; <span class="font-bold">${outcome === 'small' ? 'NHỎ' : 'LỚN'}</span>.`;
-            resultHTML += playerWins ? `<br><span class="text-2xl font-bold text-green-500">🎉 BẠN THẮNG! 🎉</span>` : `<br><span class="text-2xl font-bold text-red-500">😥 BẠN THUA! 😥</span>`;
+            resultHTML += playerWins ? `<br><span class="text-2xl font-bold text-green-500">� BẠN THẮNG! 🎉</span>` : `<br><span class="text-2xl font-bold text-red-500">😥 BẠN THUA! 😥</span>`;
             resultText.innerHTML = resultHTML;
             
             addToHistory({ val1, val2, diff, outcome, playerBet, playerWins });
             resetForNextRound();
         }
-        // *** KẾT THÚC SỬA LỖI ***
 
         function addToHistory(logEntry) {
             history.unshift(logEntry);
@@ -313,3 +309,4 @@
     </script>
 </body>
 </html>
+�
