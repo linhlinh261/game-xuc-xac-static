@@ -278,52 +278,29 @@
                     const roomDoc = await transaction.get(roomRef);
                     let roomData;
 
-                  if (!roomDoc.exists()) {
-    // Tạo room mới hoàn toàn, đảm bảo player đầu tiên luôn có name!
-    roomData = {
-        id: roomId,
-        players: [
-            {
-                id: userId,
-                name: localPlayerName || 'Người chơi',
-                score: 0,
-                rpsChoice: null,
-                bet: null,
-                wantsRematch: false
-            },
-           null 
-        ],
-        playerCount: 1,
-        status: 'waiting',
-    };
-    myPlayerIndex = 0;
-} else {
-    roomData = roomDoc.data();
-    if (!Array.isArray(roomData.players) || roomData.players.length !== 2) {
-        roomData.players = [null, null];
-        roomData.playerCount = 0;
-    }
-
-    if (roomData.playerCount >= 2) {
-        throw new Error("Phòng đã đầy!");
-    }
-    const emptySlot = roomData.players.findIndex(p => p === null);
-    if (emptySlot === -1) throw new Error("Phòng đầy nhưng playerCount không chính xác.");
-
-    roomData.players[emptySlot] = {
-        id: userId,
-        name: localPlayerName || 'Người chơi',
-        score: 0,
-        rpsChoice: null,
-        bet: null,
-        wantsRematch: false
-    };
-    myPlayerIndex = emptySlot;
-    roomData.playerCount++;
-    if (roomData.playerCount === 2) roomData.status = 'rps';
-}
-transaction.set(roomRef, roomData);
-
+                    if (!roomDoc.exists()) {
+                        roomData = {
+                            id: roomId,
+                            players: [{ id: userId, name: localPlayerName, score: 0, rpsChoice: null, bet: null, wantsRematch: false }, null],
+                            playerCount: 1,
+                            status: 'waiting',
+                        };
+                        myPlayerIndex = 0;
+                    } else {
+                        roomData = roomDoc.data();
+                        if (roomData.playerCount >= 2) {
+                            throw new Error("Phòng đã đầy!");
+                        }
+                        const emptySlot = roomData.players.findIndex(p => p === null);
+                        if (emptySlot === -1) throw new Error("Phòng đầy nhưng playerCount không chính xác.");
+                        
+                        roomData.players[emptySlot] = { id: userId, name: localPlayerName, score: 0, rpsChoice: null, bet: null, wantsRematch: false };
+                        myPlayerIndex = emptySlot;
+                        roomData.playerCount++;
+                        if(roomData.playerCount === 2) roomData.status = 'rps';
+                    }
+                    transaction.set(roomRef, roomData);
+                });
 
                 if(lobbyUnsubscribe) lobbyUnsubscribe();
                 currentRoomId = roomId;
@@ -349,8 +326,8 @@ transaction.set(roomRef, roomData);
                     }
                     updateGameUI();
                     
-                    if (oldStatus === 'results' && gameState.status === 'betting') {
-                        // This check is implicitly handled by the new transaction logic.
+                    if (oldStatus !== 'results' && gameState.status === 'results') {
+                         checkAndResetForRematch();
                     }
                 } else {
                     showNotification("Chủ phòng đã rời đi. Quay về sảnh chờ.");
@@ -387,15 +364,13 @@ transaction.set(roomRef, roomData);
                         rpsDisplay = `<p class="mt-1">Ra: <span class="text-xl font-bold text-gray-500">Đã chọn</span></p>`;
                     }
                 }
-        
-                 const displayName = player && player.name ? player.name : 'Người chơi';
-
-el.innerHTML = `
-  <h3 class="text-lg font-bold">${displayName}</h3>
-  <p class="text-2xl font-black text-indigo-600">${Number.isFinite(player.score) ? player.score : 0} Điểm</p>
-  ${player.bet ? `<p class="mt-1">Đã cược: <span class="font-bold text-xl">${player.bet}</span></p>` : ''}
-  ${rpsDisplay}
-`;
+                el.innerHTML = `
+                    <h3 class="text-lg font-bold">${player.name || 'Người chơi'}</h3>
+                    <p class="text-2xl font-black text-indigo-600">${Number.isFinite(player.score) ? player.score : 0} Điểm</p>
+                    ${player.bet ? `<p class="mt-1">Đã cược: <span class="font-bold text-xl">${player.bet}</span></p>` : ''}
+                    ${rpsDisplay}
+                `;
+            };
             
             renderPlayerBox(player1Info, gameState.players[0], myPlayerIndex === 0);
             renderPlayerBox(player2Info, gameState.players[1], myPlayerIndex === 1);
@@ -491,11 +466,10 @@ el.innerHTML = `
         }
         
         async function updatePlayerState(key, value) {
-    const update = {};
-    update[`players.${myPlayerIndex}.${key}`] = value;
-    console.log('updatePlayerState:', update);
-    await updateDoc(doc(db, roomsCollectionPath, `room-${currentRoomId}`), update);
-}
+             const update = {};
+             update[`players.${myPlayerIndex}.${key}`] = value;
+             await updateDoc(doc(db, roomsCollectionPath, `room-${currentRoomId}`), update);
+        }
 
         rpsChoices.addEventListener('click', (e) => {
             const choice = e.target.closest('.rps-choice')?.dataset.choice;
@@ -580,15 +554,12 @@ el.innerHTML = `
             }
         }
         
-        // This button click now only signals the player's intent to play again.
         playAgainBtn.addEventListener('click', async () => {
             if(gameState.status === 'results') {
                 await updatePlayerState('wantsRematch', true);
             }
         });
         
-        // The actual game reset logic is now handled exclusively by the host (player 0) within a secure transaction.
-        // This is triggered by the onSnapshot listener when it detects both players want a rematch.
         async function checkAndResetForRematch() {
             if (
                 gameState.status === 'results' &&
@@ -604,14 +575,12 @@ el.innerHTML = `
 
                         const roomData = roomDoc.data();
                         
-                        // Double-check the conditions inside the transaction to prevent race conditions
                         if (roomData.status !== 'results' || !roomData.players[0]?.wantsRematch || !roomData.players[1]?.wantsRematch) {
                             return;
                         }
                         
                         const nextTurn = roomData.roundWinner !== null && roomData.roundWinner !== -1 ? roomData.roundWinner : roomData.rpsWinner;
 
-                        // Simply reset the necessary fields, keeping the core player data (id, name, score) intact.
                         transaction.update(roomRef, {
                             status: 'betting',
                             turn: nextTurn,
