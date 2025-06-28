@@ -487,7 +487,7 @@
              const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
              if (winner === -1) {
                  if (myPlayerIndex === 0) {
-                    await updateDoc(roomRef, { [`players.${myPlayerIndex}.bet`]: number });
+                    await updateDoc(roomRef, { 'players.0.rpsChoice': null, 'players.1.rpsChoice': null });
                  }
              } else {
                  if (myPlayerIndex === winner) {
