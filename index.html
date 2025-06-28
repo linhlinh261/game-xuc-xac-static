@@ -3,691 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trò Chơi Cược Xúc Xắc (Online với Phòng)</title>
+    <title>Game: Hiệu Hai Xúc Xắc</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Firebase -->
-    <script>
-        // Use user-provided Firebase config
-        window.__firebase_config = JSON.stringify({
-            apiKey: "AIzaSyCUrFw_GAv5bIGfwFfuiwCuBcjaNqFohVs",
-            authDomain: "tonghaixucxac.firebaseapp.com",
-            projectId: "tonghaixucxac",
-            storageBucket: "tonghaixucxac.firebasestorage.app",
-            messagingSenderId: "282682257745",
-            appId: "1:282682257745:web:b1d53ac3f903d95be8a370",
-        });
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Roboto', sans-serif; }
-        .room-btn { transition: all 0.2s ease-in-out; }
-        .room-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .dice { width: 80px; height: 80px; padding: 10px; border-radius: 12px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 5px; }
-        .dot { width: 14px; height: 14px; background-color: black; border-radius: 50%; }
-        .dot-container { display: flex; justify-content: center; align-items: center; }
-        .dot-1 > .dot-container:nth-child(1) { grid-area: 2 / 2; }
-        .dot-2 > .dot-container:nth-child(1) { grid-area: 1 / 1; } .dot-2 > .dot-container:nth-child(2) { grid-area: 3 / 3; }
-        .dot-3 > .dot-container:nth-child(1) { grid-area: 1 / 1; } .dot-3 > .dot-container:nth-child(2) { grid-area: 2 / 2; } .dot-3 > .dot-container:nth-child(3) { grid-area: 3 / 3; }
-        .dot-4 > .dot-container:nth-child(1) { grid-area: 1 / 1; } .dot-4 > .dot-container:nth-child(2) { grid-area: 1 / 3; } .dot-4 > .dot-container:nth-child(3) { grid-area: 3 / 1; } .dot-4 > .dot-container:nth-child(4) { grid-area: 3 / 3; }
-        .dot-5 > .dot-container:nth-child(1) { grid-area: 1 / 1; } .dot-5 > .dot-container:nth-child(2) { grid-area: 1 / 3; } .dot-5 > .dot-container:nth-child(3) { grid-area: 2 / 2; } .dot-5 > .dot-container:nth-child(4) { grid-area: 3 / 1; } .dot-5 > .dot-container:nth-child(5) { grid-area: 3 / 3; }
-        .dot-6 > .dot-container:nth-child(1) { grid-area: 1 / 1; } .dot-6 > .dot-container:nth-child(2) { grid-area: 1 / 3; } .dot-6 > .dot-container:nth-child(3) { grid-area: 2 / 1; } .dot-6 > .dot-container:nth-child(4) { grid-area: 2 / 3; } .dot-6 > .dot-container:nth-child(5) { grid-area: 3 / 1; } .dot-6 > .dot-container:nth-child(6) { grid-area: 3 / 3; }
-        .bet-circle.selected-by-me { background-color: #3b82f6; color: white; border-color: #1d4ed8; }
-        .bet-circle.selected-by-opponent { background-color: #ef4444; color: white; border-color: #b91c1c; }
-        .bet-circle.correct-guess { animation: pulse-green 2s infinite; }
-        @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); } 50% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); } }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .dice-container {
+            perspective: 1200px;
+        }
+        .dice {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            transform-style: preserve-3d;
+            transition: transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .dice-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #4b5563;
+            border-radius: 10px;
+            background-color: #f9fafb;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            place-items: center;
+            padding: 5px;
+        }
+        .dot { 
+            display: block; 
+            width: 18px; 
+            height: 18px; 
+            border-radius: 50%; 
+            background-color: #1f2937; 
+        }
+
+        /* Dot placements for each face */
+        .face-1 .dot:nth-child(1) { grid-column: 2; grid-row: 2; }
+        .face-2 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-2 .dot:nth-child(2) { grid-column: 3; grid-row: 3; }
+        .face-3 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-3 .dot:nth-child(2) { grid-column: 2; grid-row: 2; }
+        .face-3 .dot:nth-child(3) { grid-column: 3; grid-row: 3; }
+        .face-4 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-4 .dot:nth-child(2) { grid-column: 3; grid-row: 1; }
+        .face-4 .dot:nth-child(3) { grid-column: 1; grid-row: 3; }
+        .face-4 .dot:nth-child(4) { grid-column: 3; grid-row: 3; }
+        .face-5 .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .face-5 .dot:nth-child(2) { grid-column: 3; grid-row: 1; }
+        .face-5 .dot:nth-child(3) { grid-column: 2; grid-row: 2; }
+        .face-5 .dot:nth-child(4) { grid-column: 1; grid-row: 3; }
+        .face-5 .dot:nth-child(5) { grid-column: 3; grid-row: 3; }
+        .face-6 .dot:nth-child(n+1):nth-child(-n+2) { grid-column: 1; }
+        .face-6 .dot:nth-child(n+3):nth-child(-n+4) { grid-column: 2; }
+        .face-6 .dot:nth-child(n+5):nth-child(-n+6) { grid-column: 3; }
+        .face-6 .dot:nth-child(odd) { grid-row: 1; }
+        .face-6 .dot:nth-child(even) { grid-row: 3; }
+
+
+        /* Initial positions of each face to form a cube */
+        .face-1 { transform: rotateY(0deg) translateZ(40px); }
+        .face-6 { transform: rotateY(180deg) translateZ(40px); }
+        .face-2 { transform: rotateX(90deg) translateZ(40px); }
+        .face-5 { transform: rotateX(-90deg) translateZ(40px); }
+        .face-3 { transform: rotateY(90deg) translateZ(40px); }
+        .face-4 { transform: rotateY(-90deg) translateZ(40px); }
+        
+        .bet-btn.selected { 
+            transform: scale(1.05); 
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); 
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+        
+        <!-- *** THAY ĐỔI: Sửa lỗi bố cục trên di động *** -->
+        <!-- Header Section -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+            <!-- Title Block -->
+            <div class="text-center w-full order-2 sm:order-1">
+                <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400">Game Hiệu Hai Xúc Xắc</h1>
+                <p class="mb-4 text-gray-600 dark:text-gray-400">Chọn nguyện vọng và thử vận may của bạn!</p>
+            </div>
 
-    <div id="app-container" class="w-full max-w-5xl mx-auto">
-        <!-- Notification Toast -->
-        <div id="notification-toast" class="fixed top-5 right-5 bg-blue-600 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 z-50 opacity-0 pointer-events-none"></div>
-
-        <!-- Name View -->
-        <div id="name-view">
-            <div class="bg-white p-8 rounded-xl shadow-lg text-center">
-                <h1 class="text-3xl font-bold mb-6 text-gray-700">Chào mừng đến với Cược Xúc Xắc</h1>
-                <div class="mb-6">
-                    <label for="player-name" class="block text-lg font-medium mb-2">Nhập tên của bạn để bắt đầu</label>
-                    <input type="text" id="player-name" class="w-full max-w-sm mx-auto p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-                <button id="enter-lobby-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md">Vào Sảnh Chờ</button>
+            <!-- Reset Button -->
+            <button id="reset-btn" class="order-1 sm:order-2 self-end sm:self-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-lg text-sm transition-colors mb-2 sm:mb-0">
+                Chơi lại
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 text-center mb-4">
+            <div>
+                <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300">ĐIỂM CỦA BẠN</h2>
+                <p id="player-score" class="text-4xl font-bold text-green-500">0</p>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300">ĐIỂM CỦA MÁY</h2>
+                <p id="computer-score" class="text-4xl font-bold text-red-500">0</p>
             </div>
         </div>
+        <hr class="mb-4 border-gray-300 dark:border-gray-600">
 
-        <!-- Lobby View -->
-        <div id="lobby-view" class="hidden">
-            <div class="bg-white p-8 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-bold text-gray-700">Sảnh Chờ</h1>
-                    <p>Xin chào, <strong id="lobby-player-name"></strong>!</p>
-                </div>
-                <div id="room-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    <!-- Room buttons will be generated here -->
-                </div>
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-center mb-4 dark:text-white">1. Chọn nguyện vọng của bạn</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="bet-small-btn" class="bet-btn p-4 bg-blue-500 text-white rounded-lg shadow-md transition-all duration-300 hover:bg-blue-600 disabled:opacity-50">
+                    <span class="font-bold text-xl">NHỎ</span>
+                    <span class="block text-sm">(Hiệu là 0, 1, 2)</span>
+                </button>
+                <button id="bet-large-btn" class="bet-btn p-4 bg-red-500 text-white rounded-lg shadow-md transition-all duration-300 hover:bg-red-600 disabled:opacity-50">
+                    <span class="font-bold text-xl">LỚN</span>
+                    <span class="block text-sm">(Hiệu là 3, 4, 5)</span>
+                </button>
             </div>
         </div>
         
-        <!-- Game View -->
-        <div id="game-view" class="hidden">
-             <div class="bg-white p-6 rounded-xl shadow-lg w-full">
-                <div class="flex justify-between items-center border-b pb-4 mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">Phòng <span id="game-room-id"></span></h2>
-                    <button id="quit-game-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition">Rời Phòng</button>
+        <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-xl mb-6">
+             <h2 class="text-xl font-bold text-center mb-4 dark:text-white">2. Tung xúc xắc</h2>
+            <div class="flex justify-center items-center gap-12 mb-4 min-h-[140px]">
+                <div class="dice-container">
+                    <div id="dice1" class="dice"></div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-center">
-                    <div id="player-1-info" class="p-4 bg-blue-100 rounded-lg border-2 border-blue-300"></div>
-                    <div id="player-2-info" class="p-4 bg-red-100 rounded-lg border-2 border-red-300"></div>
-                </div>
-                <div id="game-status" class="text-center text-xl font-semibold my-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg"></div>
-                <div id="main-game-area" class="mt-6">
-                     <div id="rps-view" class="hidden text-center">
-                        <h3 class="text-lg font-medium mb-4">Oẳn tù xì để quyết định ai đi trước!</h3>
-                        <div id="rps-choices" class="flex justify-center gap-4">
-                            <button data-choice="r" class="rps-choice text-5xl p-4 rounded-lg hover:bg-gray-200 transition">✊</button>
-                            <button data-choice="p" class="rps-choice text-5xl p-4 rounded-lg hover:bg-gray-200 transition">✋</button>
-                            <button data-choice="s" class="rps-choice text-5xl p-4 rounded-lg hover:bg-gray-200 transition">✂️</button>
-                        </div>
-                        <div id="rps-result-text" class="mt-4 text-2xl font-bold"></div>
-                        <button id="continue-btn" class="hidden mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Tiếp Tục</button>
-                    </div>
-                    <div id="betting-view" class="hidden">
-                        <div id="betting-board" class="flex flex-wrap justify-center gap-3"></div>
-                    </div>
-                    <div id="dice-roll-view" class="hidden flex flex-col items-center justify-center min-h-[180px]">
-                        <p class="text-2xl font-bold mb-4" id="rolling-text"></p>
-                        <div class="flex gap-6">
-                           <div id="dice1" class="dice bg-white shadow-md"></div>
-                           <div id="dice2" class="dice bg-white shadow-md"></div>
-                        </div>
-                    </div>
-                    <div id="result-view" class="hidden text-center">
-                        <h3 class="text-2xl font-bold mb-2">Kết quả là: <span id="dice-result-value" class="text-blue-600"></span></h3>
-                        <p id="winner-text" class="text-xl font-semibold text-green-600 mb-4"></p>
-                        <button id="play-again-btn" class="bg-green-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-600 transition">Chơi Lại</button>
-                    </div>
+                <div class="dice-container">
+                    <div id="dice2" class="dice"></div>
                 </div>
             </div>
+            <button id="roll-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                🎲 Tung Xúc Xắc
+            </button>
+        </div>
+        
+        <div id="result-area" class="text-center min-h-[80px] p-4 bg-gray-100 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center">
+             <p id="result-text" class="text-xl font-bold dark:text-gray-300">Hãy chọn nguyện vọng của bạn để bắt đầu!</p>
         </div>
 
+        <div>
+            <h2 class="text-xl font-bold text-center mb-4 dark:text-white">Lịch sử các lần gieo</h2>
+            <div id="history-log" class="max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-700 p-3 rounded-lg space-y-2">
+                 <p class="text-gray-500 dark:text-gray-400 text-center">Chưa có lịch sử.</p>
+            </div>
+        </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        // --- DOM Elements ---
+        const betSmallBtn = document.getElementById('bet-small-btn');
+        const betLargeBtn = document.getElementById('bet-large-btn');
+        const rollBtn = document.getElementById('roll-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const dice1El = document.getElementById('dice1');
+        const dice2El = document.getElementById('dice2');
+        const resultText = document.getElementById('result-text');
+        const historyLog = document.getElementById('history-log');
+        const playerScoreEl = document.getElementById('player-score');
+        const computerScoreEl = document.getElementById('computer-score');
+
+        // --- Game State ---
+        let playerBet = null, history = [], playerScore = 0, computerScore = 0, isRolling = false;
         
-        // --- Firebase Initialization ---
-        const firebaseConfig = JSON.parse(window.__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // --- UI Elements ---
-        const nameView = document.getElementById('name-view');
-        const lobbyView = document.getElementById('lobby-view');
-        const gameView = document.getElementById('game-view');
-        const playerNameInput = document.getElementById('player-name');
-        const enterLobbyBtn = document.getElementById('enter-lobby-btn');
-        const roomList = document.getElementById('room-list');
-        const lobbyPlayerName = document.getElementById('lobby-player-name');
-        const gameRoomId = document.getElementById('game-room-id');
-        const quitGameBtn = document.getElementById('quit-game-btn');
-        const player1Info = document.getElementById('player-1-info');
-        const player2Info = document.getElementById('player-2-info');
-        const gameStatus = document.getElementById('game-status');
-        const rpsView = document.getElementById('rps-view');
-        const bettingView = document.getElementById('betting-view');
-        const diceRollView = document.getElementById('dice-roll-view');
-        const resultView = document.getElementById('result-view');
-        const playAgainBtn = document.getElementById('play-again-btn');
-        const rpsChoices = document.getElementById('rps-choices');
-        const rpsResultText = document.getElementById('rps-result-text');
-        const continueBtn = document.getElementById('continue-btn');
-
-        // --- App State ---
-        let localPlayerName = '';
-        let currentRoomId = null;
-        let myPlayerIndex = null;
-        let gameState = {};
-        let lobbyUnsubscribe = null;
-        let gameUnsubscribe = null;
-        let userId;
-
-        // --- Constants ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const roomsCollectionPath = `/artifacts/${appId}/public/data/dice-game-rooms`;
-        
-        // --- Utility ---
-        function showNotification(message) {
-            const toast = document.getElementById('notification-toast');
-            toast.textContent = message;
-            toast.classList.remove('opacity-0');
-            setTimeout(() => toast.classList.add('opacity-0'), 3000);
-        }
-
-        function createDiceDots(face) {
-            let dots = '';
-            for (let i = 0; i < face; i++) {
-                dots += `<div class="dot-container"><div class="dot"></div></div>`;
+        function getDiceHTML() {
+            let facesHTML = '';
+            for (let i = 1; i <= 6; i++) {
+                facesHTML += `<div class="dice-face face-${i}">${'<span class="dot"></span>'.repeat(i)}</div>`;
             }
-            return `<div class="dice bg-white shadow-md dot-${face}">${dots}</div>`;
+            return facesHTML;
         }
 
-        // --- Navigation & State Management ---
-        function showView(view) {
-            [nameView, lobbyView, gameView].forEach(v => v.classList.add('hidden'));
-            view.classList.remove('hidden');
+        const diceRotations = {
+            1: 'rotateX(0deg) rotateY(0deg)',
+            2: 'rotateX(-90deg) rotateY(0deg)',
+            3: 'rotateX(0deg) rotateY(-90deg)',
+            4: 'rotateX(0deg) rotateY(90deg)',
+            5: 'rotateX(90deg) rotateY(0deg)',
+            6: 'rotateX(0deg) rotateY(180deg)',
+        };
+
+        function setupDice() {
+            dice1El.innerHTML = getDiceHTML();
+            dice2El.innerHTML = getDiceHTML();
+            dice1El.style.transition = 'transform 0s';
+            dice2El.style.transition = 'transform 0s';
+            dice1El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
+            dice2El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
         }
 
-        async function goToLobby() {
-            if (gameUnsubscribe) gameUnsubscribe();
-            gameUnsubscribe = null;
-            currentRoomId = null;
-            myPlayerIndex = null;
+        // --- Event Listeners ---
+        betSmallBtn.addEventListener('click', () => selectBet('small'));
+        betLargeBtn.addEventListener('click', () => selectBet('large'));
+        rollBtn.addEventListener('click', handleRoll);
+        resetBtn.addEventListener('click', resetGame);
+
+        function selectBet(bet) {
+            if (isRolling) return;
+            playerBet = bet;
             
-            lobbyPlayerName.textContent = localPlayerName;
-            showView(lobbyView);
-            renderLobby({});
-            listenToLobby();
-        }
-        
-        async function leaveRoom() {
-            if (!currentRoomId || userId === null) return goToLobby();
-
-            const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const roomDoc = await transaction.get(roomRef);
-                    if (!roomDoc.exists()) return;
-
-                    const roomData = roomDoc.data();
-                    const newPlayers = roomData.players.filter(p => p && p.id !== userId);
-                    
-                    if (newPlayers.length === 0) {
-                        transaction.delete(roomRef);
-                    } else {
-                        const newRoomData = {
-                            ...roomData,
-                            players: newPlayers.length === 1 ? [newPlayers[0], null] : [null, null],
-                            playerCount: newPlayers.length,
-                            status: 'waiting'
-                        };
-                         transaction.set(roomRef, newRoomData);
-                    }
-                });
-            } catch (error) {
-                console.error("Error leaving room: ", error);
-            } finally {
-                goToLobby();
-            }
-        }
-        quitGameBtn.addEventListener('click', leaveRoom);
-
-        // --- Lobby Logic ---
-        function listenToLobby() {
-            if (lobbyUnsubscribe) lobbyUnsubscribe();
-            const roomsRef = collection(db, roomsCollectionPath);
-            lobbyUnsubscribe = onSnapshot(roomsRef, (snapshot) => {
-                const roomsData = {};
-                snapshot.forEach(doc => {
-                    const room = doc.data();
-                    roomsData[room.id] = room;
-                });
-                renderLobby(roomsData);
-            });
-        }
-        
-        function renderLobby(roomsData) {
-            roomList.innerHTML = '';
-            for (let i = 1; i <= 30; i++) {
-                const room = roomsData[i];
-                const btn = document.createElement('button');
-                btn.className = 'room-btn p-4 border rounded-lg shadow-sm';
-                let text = '';
-                let statusClass = '';
-
-                if (room && room.playerCount > 0) {
-                     text = `${room.playerCount} / 2`;
-                    if (room.playerCount === 1) {
-                        statusClass = 'bg-yellow-100 border-yellow-300';
-                        btn.disabled = false;
-                    } else {
-                        statusClass = 'bg-red-200 border-red-400 text-gray-500';
-                        btn.disabled = true;
-                    }
-                } else {
-                    text = 'Trống';
-                    statusClass = 'bg-green-100 border-green-300 hover:bg-green-200';
-                    btn.disabled = false;
-                }
-                
-                btn.innerHTML = `<div class="font-bold text-lg">Phòng ${i}</div><div class="text-sm">${text}</div>`;
-                btn.classList.add(...statusClass.split(' '));
-                btn.dataset.roomId = i;
-                btn.onclick = () => joinRoom(i);
-                roomList.appendChild(btn);
-            }
-        }
-        
-        async function joinRoom(roomId) {
-            const roomRef = doc(db, roomsCollectionPath, `room-${roomId}`);
+            betSmallBtn.classList.toggle('selected', bet === 'small');
+            betSmallBtn.classList.toggle('ring-4', bet === 'small');
+            betSmallBtn.classList.toggle('ring-blue-400', bet === 'small');
             
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const roomDoc = await transaction.get(roomRef);
-                    let roomData;
+            betLargeBtn.classList.toggle('selected', bet === 'large');
+            betLargeBtn.classList.toggle('ring-4', bet === 'large');
+            betLargeBtn.classList.toggle('ring-red-400', bet === 'large');
 
-                    if (!roomDoc.exists()) {
-                        roomData = {
-                            id: roomId,
-                            players: [{ id: userId, name: localPlayerName, score: 0, rpsChoice: null, bet: null, wantsRematch: false }, null],
-                            playerCount: 1,
-                            status: 'waiting',
-                        };
-                        myPlayerIndex = 0;
-                    } else {
-                        roomData = roomDoc.data();
-                        if (roomData.playerCount >= 2) {
-                            throw new Error("Phòng đã đầy!");
-                        }
-                        const emptySlot = roomData.players.findIndex(p => p === null);
-                        if (emptySlot === -1) throw new Error("Phòng đầy nhưng playerCount không chính xác.");
-                        
-                        roomData.players[emptySlot] = { id: userId, name: localPlayerName, score: 0, rpsChoice: null, bet: null, wantsRematch: false };
-                        myPlayerIndex = emptySlot;
-                        roomData.playerCount++;
-                        if(roomData.playerCount === 2) roomData.status = 'rps';
-                    }
-                    transaction.set(roomRef, roomData);
-                });
-
-                if(lobbyUnsubscribe) lobbyUnsubscribe();
-                currentRoomId = roomId;
-                listenToGame(roomId);
-                showView(gameView);
-
-            } catch (e) {
-                console.error("Join room failed: ", e);
-                showNotification(e.message);
+            if (bet) {
+                rollBtn.disabled = false;
+                resultText.textContent = `Bạn đã chọn ${bet === 'small' ? 'NHỎ' : 'LỚN'}. Hãy tung xúc xắc!`;
+            } else {
+                rollBtn.disabled = true;
             }
         }
 
-        // --- Game Logic ---
-        function listenToGame(roomId) {
-            if (gameUnsubscribe) gameUnsubscribe();
-            const roomRef = doc(db, roomsCollectionPath, `room-${roomId}`);
-            gameUnsubscribe = onSnapshot(roomRef, (doc) => {
-                if (doc.exists()) {
-                    const oldStatus = gameState?.status;
-                    gameState = doc.data();
-                    if (myPlayerIndex === null) {
-                        myPlayerIndex = gameState.players.findIndex(p => p && p.id === userId);
-                    }
-                    updateGameUI();
-                    
-                    if (oldStatus === 'results' && gameState.status === 'betting') {
-                         // This check is implicitly handled by the new transaction logic.
-                    }
-                } else {
-                    showNotification("Chủ phòng đã rời đi. Quay về sảnh chờ.");
-                    goToLobby();
-                }
-            });
+        function handleRoll() {
+            if (!playerBet || isRolling) return;
+
+            isRolling = true;
+            rollBtn.disabled = true;
+            betSmallBtn.disabled = true;
+            betLargeBtn.disabled = true;
+            resultText.textContent = 'Đang tung...';
+            
+            dice1El.style.transition = 'transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+            dice2El.style.transition = 'transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+
+            const val1 = Math.floor(Math.random() * 6) + 1;
+            const val2 = Math.floor(Math.random() * 6) + 1;
+            
+            const randomX1 = 360 * (Math.floor(Math.random() * 4) + 2);
+            const randomY1 = 360 * (Math.floor(Math.random() * 4) + 2);
+            const randomX2 = 360 * (Math.floor(Math.random() * 4) + 2);
+            const randomY2 = 360 * (Math.floor(Math.random() * 4) + 2);
+
+            dice1El.style.transform = `translateZ(-40px) rotateX(${randomX1}deg) rotateY(${randomY1}deg) ${diceRotations[val1]}`;
+            dice2El.style.transform = `translateZ(-40px) rotateX(${randomX2}deg) rotateY(${randomY2}deg) ${diceRotations[val2]}`;
+
+            setTimeout(() => {
+                showFinalResult(val1, val2);
+            }, 1600);
+        }
+
+        function showFinalResult(val1, val2) {
+            const diff = Math.abs(val1 - val2);
+            const outcome = (diff <= 2) ? 'small' : 'large';
+            const playerWins = (playerBet === outcome);
+            
+            if (playerWins) playerScore++; else computerScore++;
+            playerScoreEl.textContent = playerScore;
+            computerScoreEl.textContent = computerScore;
+
+            let resultHTML = `Xúc xắc: (<span class="font-bold">${val1}</span>; <span class="font-bold">${val2}</span>). Hiệu: <span class="font-bold">${diff}</span> &rArr; <span class="font-bold">${outcome === 'small' ? 'NHỎ' : 'LỚN'}</span>.`;
+            resultHTML += playerWins 
+                ? `<br><span class="text-2xl font-bold text-green-500">🎉 BẠN THẮNG! 🎉</span>` 
+                : `<br><span class="text-2xl font-bold text-red-500">☘️ BẠN THUA! ☘️</span>`;
+            resultText.innerHTML = resultHTML;
+            
+            addToHistory({ val1, val2, diff, outcome, playerBet, playerWins });
+
+            isRolling = false;
+            betSmallBtn.disabled = false;
+            betLargeBtn.disabled = false;
+            rollBtn.disabled = true; 
+
+            playerBet = null;
+            betSmallBtn.classList.remove('selected', 'ring-4', 'ring-blue-400');
+            betLargeBtn.classList.remove('selected', 'ring-4', 'ring-red-400');
+        }
+
+        function addToHistory(logEntry) {
+            history.unshift(logEntry);
+            if (history.length > 20) history.pop();
+            updateHistoryLog();
         }
         
-        function updateGameUI() {
-             if (!gameState || !gameState.players || myPlayerIndex === -1 || myPlayerIndex === null) {
-                if(currentRoomId) {
-                    showNotification("Bạn đã bị ngắt kết nối khỏi phòng.");
-                    goToLobby();
-                }
+        function updateHistoryLog() {
+            if (history.length === 0) {
+                historyLog.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Chưa có lịch sử.</p>';
                 return;
             }
-
-            const me = gameState.players[myPlayerIndex];
-            const opponent = gameState.players[1 - myPlayerIndex];
-            
-            gameRoomId.textContent = currentRoomId;
-
-            const renderPlayerBox = (el, player, isMe) => {
-                if (!player) {
-                    el.innerHTML = `<h3 class="font-bold text-lg">Đang chờ...</h3>`;
-                    return;
-                }
-                const rpsMap = { r: '✊', p: '✋', s: '✂️' };
-                let rpsDisplay = '';
-                 if (player.rpsChoice && gameState.status === 'rps') {
-                    if (gameState.players[0]?.rpsChoice && gameState.players[1]?.rpsChoice) {
-                        rpsDisplay = `<p class="mt-1">Ra: <span class="text-2xl">${rpsMap[player.rpsChoice]}</span></p>`;
-                    } else {
-                        rpsDisplay = `<p class="mt-1">Ra: <span class="text-xl font-bold text-gray-500">Đã chọn</span></p>`;
-                    }
-                }
-                el.innerHTML = `
-                    <h3 class="text-lg font-bold">${player.name || 'Người chơi'}</h3>
-                    <p class="text-2xl font-black text-indigo-600">${Number.isFinite(player.score) ? player.score : 0} Điểm</p>
-                    ${player.bet ? `<p class="mt-1">Đã cược: <span class="font-bold text-xl">${player.bet}</span></p>` : ''}
-                    ${rpsDisplay}
-                `;
-            };
-            
-            renderPlayerBox(player1Info, gameState.players[0], myPlayerIndex === 0);
-            renderPlayerBox(player2Info, gameState.players[1], myPlayerIndex === 1);
-
-            [rpsView, bettingView, diceRollView, resultView].forEach(v => v.classList.add('hidden'));
-
-            switch(gameState.status) {
-                case 'waiting':
-                    gameStatus.textContent = 'Đang chờ người chơi thứ hai...';
-                    break;
-                case 'rps': handleRPSUI(me, opponent); break;
-                case 'betting': handleBettingUI(me, opponent); break;
-                case 'rolling': handleRollingUI(); break;
-                case 'results': handleResultUI(me); break;
-            }
-             if (gameState.status === 'results' && me?.wantsRematch && opponent?.wantsRematch) {
-                 checkAndResetForRematch();
-             }
+            historyLog.innerHTML = history.map((log, index) => {
+                const outcomeClass = log.outcome === 'small' ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-red-100 dark:bg-red-900/50';
+                const winClass = log.playerWins ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const outcomeText = log.outcome === 'small' ? 'NHỎ' : 'LỚN';
+                const playerBetText = log.playerBet === 'small' ? 'NHỎ' : 'LỚN';
+                return `<div class="p-2 rounded ${outcomeClass} text-sm"><span class="font-bold">#${history.length - index}</span>: Xúc xắc (${log.val1}; ${log.val2}). Hiệu: <strong>${log.diff}</strong> (${outcomeText}). Bạn chọn ${playerBetText}. <strong class="${winClass}">${log.playerWins ? 'Thắng' : 'Thua'}</strong></div>`;
+            }).join('');
         }
         
-        function handleRPSUI(me, opponent) {
-             rpsView.classList.remove('hidden');
-             rpsResultText.textContent = '';
-             continueBtn.classList.add('hidden');
-             rpsChoices.classList.remove('hidden');
-             const rpsMap = { r: 'Búa ✊', p: 'Bao ✋', s: 'Kéo ✂️' };
-
-             if (me?.rpsChoice && opponent?.rpsChoice) {
-                 rpsChoices.classList.add('hidden');
-                 const winnerId = determineRPSWinner();
-                 if (winnerId === -1) {
-                     rpsResultText.innerHTML = `Hòa! Cả hai cùng ra ${rpsMap[me.rpsChoice]}. Chơi lại!`;
-                     if (myPlayerIndex === 0) continueBtn.classList.remove('hidden');
-                     else gameStatus.textContent = 'Hòa! Đang chờ chủ phòng chơi lại...';
-                 } else {
-                     const winnerName = gameState.players[winnerId]?.name || `Người chơi ${winnerId + 1}`;
-                     const p1Name = gameState.players[0]?.name || 'Người chơi 1';
-                     const p2Name = gameState.players[1]?.name || 'Người chơi 2';
-                     rpsResultText.innerHTML = `${p1Name} ra ${rpsMap[gameState.players[0].rpsChoice]}, ${p2Name} ra ${rpsMap[gameState.players[1].rpsChoice]}. <br> <span class="text-green-600">${winnerName} thắng và đi trước!</span>`;
-                     if (myPlayerIndex === winnerId) continueBtn.classList.remove('hidden');
-                     else gameStatus.textContent = `Đang chờ ${winnerName} tiếp tục...`;
-                 }
-             } else if (me?.rpsChoice) {
-                 gameStatus.textContent = `Đã chọn. Đang chờ ${opponent?.name || 'đối thủ'}...`;
-                 rpsChoices.classList.add('hidden');
-             } else {
-                 gameStatus.textContent = 'Đến lượt bạn! Hãy ra Kéo, Búa, hoặc Bao.';
-             }
+        function resetForNextRound() {
+            playerBet = null;
+            isRolling = false;
+            betSmallBtn.disabled = false;
+            betLargeBtn.disabled = false;
+            selectBet(null);
         }
 
-        function handleBettingUI(me, opponent) {
-            bettingView.classList.remove('hidden');
-            renderBettingBoard();
-            if (gameState.turn === myPlayerIndex) {
-                gameStatus.textContent = 'Đến lượt bạn! Hãy chọn một số để cược.';
-            } else {
-                gameStatus.textContent = `Đang chờ ${opponent?.name || 'đối thủ'} đặt cược...`;
-            }
+        function resetGame() {
+            if (isRolling) return;
+            playerScore = 0;
+            computerScore = 0;
+            history = [];
+            playerScoreEl.textContent = '0';
+            computerScoreEl.textContent = '0';
+            resultText.innerHTML = '<p class="text-xl font-bold dark:text-gray-300">Hãy chọn nguyện vọng của bạn để bắt đầu!</p>';
+            updateHistoryLog();
+            resetForNextRound();
+            setupDice();
         }
 
-        function handleRollingUI() {
-            gameStatus.textContent = 'Tất cả đã cược! Chuẩn bị xem kết quả!';
-            diceRollView.classList.remove('hidden');
-            document.getElementById('rolling-text').textContent = "Đang tung xúc xắc...";
-            animateDice();
-            if (myPlayerIndex === 0) {
-                 setTimeout(rollDice, 2500);
-            }
-        }
-
-        function handleResultUI(me) {
-            gameStatus.textContent = 'Vòng chơi kết thúc!';
-            resultView.classList.remove('hidden');
-            bettingView.classList.remove('hidden');
-            renderBettingBoard();
-            document.getElementById('dice-result-value').textContent = gameState.diceResult;
-            if (gameState.diceFaces) {
-                diceRollView.classList.remove('hidden');
-                document.getElementById('rolling-text').textContent = "Kết quả xúc xắc:";
-                document.getElementById('dice1').innerHTML = createDiceDots(gameState.diceFaces[0]);
-                document.getElementById('dice2').innerHTML = createDiceDots(gameState.diceFaces[1]);
-            }
-            const winnerText = document.getElementById('winner-text');
-            const winnerId = gameState.roundWinner;
-            if (winnerId === null) winnerText.textContent = 'Không ai đoán trúng!';
-            else if (winnerId === -1) winnerText.textContent = 'Cả hai người chơi đều đoán trúng! Mỗi người 1 điểm.';
-            else winnerText.textContent = `${gameState.players[winnerId]?.name || 'Người chơi'} đã thắng vòng này và được 1 điểm!`;
-
-            if (me?.wantsRematch) {
-                playAgainBtn.textContent = 'Đang chờ đối thủ...';
-                playAgainBtn.disabled = true;
-            } else {
-                playAgainBtn.textContent = 'Chơi Lại';
-                playAgainBtn.disabled = false;
-            }
-        }
-        
-        async function updatePlayerState(key, value) {
-             const update = {};
-             update[`players.${myPlayerIndex}.${key}`] = value;
-             await updateDoc(doc(db, roomsCollectionPath, `room-${currentRoomId}`), update);
-        }
-
-        rpsChoices.addEventListener('click', (e) => {
-            const choice = e.target.closest('.rps-choice')?.dataset.choice;
-            if (choice) updatePlayerState('rpsChoice', choice);
-        });
-
-        function determineRPSWinner() {
-            const p1c = gameState.players[0]?.rpsChoice;
-            const p2c = gameState.players[1]?.rpsChoice;
-            if (!p1c || !p2c) return null;
-            if (p1c === p2c) return -1;
-            if ((p1c === 'r' && p2c === 's') || (p1c === 's' && p2c === 'p') || (p1c === 'p' && p2c === 'r')) return 0;
-            return 1;
-        }
-        
-        continueBtn.addEventListener('click', async () => {
-             const winner = determineRPSWinner();
-             const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
-             if (winner === -1) {
-                 if (myPlayerIndex === 0) {
-                     await updateDoc(roomRef, { 'players.0.rpsChoice': null, 'players.1.rpsChoice': null });
-                 }
-             } else {
-                 if (myPlayerIndex === winner) {
-                     await updateDoc(roomRef, { status: 'betting', turn: winner, rpsWinner: winner });
-                 }
-             }
-        });
-        
-        async function placeBet(number) {
-            const opponentIndex = 1 - myPlayerIndex;
-            const updates = {
-                [`players.${myPlayerIndex}.bet`]: number,
-                turn: opponentIndex
-            };
-            
-            if (gameState.players[opponentIndex] && gameState.players[opponentIndex].bet !== null) {
-                updates.status = 'rolling';
-                updates.turn = null;
-            }
-            await updateDoc(doc(db, roomsCollectionPath, `room-${currentRoomId}`), updates);
-        }
-
-        async function rollDice() {
-            if (myPlayerIndex !== 0) return;
-            const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
-            
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const roomDoc = await transaction.get(roomRef);
-                    if (!roomDoc.exists()) throw "Phòng không tồn tại!";
-                    
-                    const currentRoomData = roomDoc.data();
-                    if (!currentRoomData.players[0] || !currentRoomData.players[1]) {
-                        return;
-                    }
-
-                    const die1 = Math.floor(Math.random() * 6) + 1;
-                    const die2 = Math.floor(Math.random() * 6) + 1;
-                    const total = die1 + die2;
-
-                    const p1 = currentRoomData.players[0];
-                    const p2 = currentRoomData.players[1];
-                    
-                    const p1Score = Number.isFinite(p1.score) ? p1.score : 0;
-                    const p2Score = Number.isFinite(p2.score) ? p2.score : 0;
-
-                    let p1Won = p1.bet === total;
-                    let p2Won = p2.bet === total;
-
-                    transaction.update(roomRef, {
-                        diceFaces: [die1, die2],
-                        diceResult: total,
-                        status: 'results',
-                        'players.0.score': p1Score + (p1Won ? 1 : 0),
-                        'players.1.score': p2Score + (p2Won ? 1 : 0),
-                        roundWinner: p1Won && p2Won ? -1 : (p1Won ? 0 : (p2Won ? 1 : null))
-                    });
-                });
-            } catch (e) {
-                console.error("Giao dịch tung xúc xắc thất bại: ", e);
-            }
-        }
-        
-        playAgainBtn.addEventListener('click', async () => {
-            if(gameState.status === 'results') {
-                await updatePlayerState('wantsRematch', true);
-            }
-        });
-        
-        async function checkAndResetForRematch() {
-            if (
-                gameState.status === 'results' &&
-                gameState.players[0]?.wantsRematch &&
-                gameState.players[1]?.wantsRematch &&
-                myPlayerIndex === 0
-            ) {
-                const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
-                try {
-                    await runTransaction(db, async (transaction) => {
-                        const roomDoc = await transaction.get(roomRef);
-                        if (!roomDoc.exists()) return;
-
-                        const roomData = roomDoc.data();
-                        
-                        if (roomData.status !== 'results' || !roomData.players[0]?.wantsRematch || !roomData.players[1]?.wantsRematch) {
-                            return;
-                        }
-                        
-                        const nextTurn = roomData.roundWinner !== null && roomData.roundWinner !== -1 ? roomData.roundWinner : roomData.rpsWinner;
-
-                        transaction.update(roomRef, {
-                            status: 'betting',
-                            turn: nextTurn,
-                            rpsWinner: nextTurn,
-                            diceResult: null,
-                            roundWinner: null,
-                            diceFaces: null,
-                            'players.0.bet': null,
-                            'players.0.wantsRematch': false,
-                            'players.0.rpsChoice': null,
-                            'players.1.bet': null,
-                            'players.1.wantsRematch': false,
-                            'players.1.rpsChoice': null,
-                        });
-                    });
-                } catch (e) {
-                    console.error("Giao dịch chơi lại thất bại: ", e);
-                }
-            }
-        }
-
-        function renderBettingBoard() {
-             const board = document.getElementById('betting-board');
-             board.innerHTML = '';
-             const me = gameState.players[myPlayerIndex];
-             const opponent = gameState.players[1 - myPlayerIndex];
-             const myTurn = gameState.status === 'betting' && gameState.turn === myPlayerIndex;
-
-             for (let i = 2; i <= 12; i++) {
-                 const circle = document.createElement('button');
-                 circle.textContent = i;
-                 let opponentBet = opponent?.bet;
-                 let classes = 'bet-circle w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold border-4 transition ';
-                 if (i === me?.bet) classes += 'selected-by-me ';
-                 else if (i === opponentBet) classes += 'selected-by-opponent ';
-                 else classes += 'bg-white border-gray-300 ';
-                 if (myTurn && !me?.bet && i !== opponentBet) {
-                     classes += 'hover:bg-blue-200 cursor-pointer';
-                     circle.disabled = false;
-                 } else {
-                     classes += 'opacity-70 cursor-not-allowed';
-                     circle.disabled = true;
-                 }
-                 if (gameState.status === 'results' && i === gameState.diceResult) classes += ' correct-guess border-green-400';
-                 circle.className = classes;
-                 if(!circle.disabled) circle.onclick = () => placeBet(i);
-                 board.appendChild(circle);
-             }
-        }
-        
-        function animateDice() {
-             const dice1El = document.getElementById('dice1');
-             const dice2El = document.getElementById('dice2');
-             let counter = 0;
-             const interval = setInterval(() => {
-                 const r1 = Math.floor(Math.random() * 6) + 1;
-                 const r2 = Math.floor(Math.random() * 6) + 1;
-                 dice1El.innerHTML = createDiceDots(r1);
-                 dice2El.innerHTML = createDiceDots(r2);
-                 counter++;
-                 if (counter > 15) clearInterval(interval);
-             }, 150);
-        }
-        
-        // --- Initial Load ---
-        enterLobbyBtn.addEventListener('click', () => {
-            localPlayerName = playerNameInput.value.trim();
-            if (!localPlayerName) {
-                showNotification("Vui lòng nhập tên của bạn.");
-                return;
-            }
-            goToLobby();
-        });
-
-        (async () => {
-            enterLobbyBtn.disabled = true;
-            enterLobbyBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            enterLobbyBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-            enterLobbyBtn.textContent = 'Đang kết nối...';
-
-            onAuthStateChanged(auth, user => {
-                if (user) {
-                    userId = user.uid;
-                    enterLobbyBtn.disabled = false;
-                    enterLobbyBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                    enterLobbyBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                    enterLobbyBtn.textContent = 'Vào Sảnh Chờ';
-                } else {
-                    userId = null;
-                    enterLobbyBtn.disabled = true;
-                    enterLobbyBtn.textContent = 'Lỗi kết nối';
-                }
-            });
-            
-            try {
-                 if(auth.currentUser) return;
-                 await signInAnonymously(auth);
-            } catch (error) {
-                 console.error("Lỗi đăng nhập ẩn danh:", error);
-                 showNotification("Lỗi xác thực người dùng.");
-            }
-
-            showView(nameView);
-        })();
+        setupDice();
     </script>
 </body>
 </html>
