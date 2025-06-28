@@ -585,10 +585,10 @@
                 const nextTurn = roomData.roundWinner !== null && roomData.roundWinner !== -1 ? roomData.roundWinner : roomData.rpsWinner;
 
                 // SỬA Ở ĐÂY!
-                const newPlayers = [
-                    { ...p1, rpsChoice: null, bet: null, wantsRematch: false },
-                    { ...p2, rpsChoice: null, bet: null, wantsRematch: false }
-                ];
+           const newPlayers = [
+    { ...p1, rpsChoice: null, bet: null, wantsRematch: false, name: p1.name },
+    { ...p2, rpsChoice: null, bet: null, wantsRematch: false, name: p2.name }
+];
                 newPlayers[0].score = Number.isFinite(p1.score) ? p1.score : 0;
                 newPlayers[1].score = Number.isFinite(p2.score) ? p2.score : 0;
 
