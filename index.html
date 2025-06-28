@@ -209,7 +209,7 @@
                     } else {
                         const newRoomData = {
                             ...roomData,
-                            players: newPlayers.length === 1 ? [newPlayers[0], null] : [null, null],
+                             players: newPlayers.length === 1 ? [newPlayers[0], null] : [],
                             playerCount: newPlayers.length,
                             status: 'waiting'
                         };
