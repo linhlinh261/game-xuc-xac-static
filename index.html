@@ -326,8 +326,8 @@
                     }
                     updateGameUI();
                     
-                    if (oldStatus !== 'results' && gameState.status === 'results') {
-                         checkAndResetForRematch();
+                    if (oldStatus === 'results' && gameState.status === 'betting') {
+                         // This check is implicitly handled by the new transaction logic.
                     }
                 } else {
                     showNotification("Chủ phòng đã rời đi. Quay về sảnh chờ.");
@@ -386,6 +386,9 @@
                 case 'rolling': handleRollingUI(); break;
                 case 'results': handleResultUI(me); break;
             }
+             if (gameState.status === 'results' && me?.wantsRematch && opponent?.wantsRematch) {
+                 checkAndResetForRematch();
+             }
         }
         
         function handleRPSUI(me, opponent) {
