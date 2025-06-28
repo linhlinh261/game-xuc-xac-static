@@ -491,10 +491,11 @@ el.innerHTML = `
         }
         
         async function updatePlayerState(key, value) {
-             const update = {};
-             update[`players.${myPlayerIndex}.${key}`] = value;
-             await updateDoc(doc(db, roomsCollectionPath, `room-${currentRoomId}`), update);
-        }
+    const update = {};
+    update[`players.${myPlayerIndex}.${key}`] = value;
+    console.log('updatePlayerState:', update);
+    await updateDoc(doc(db, roomsCollectionPath, `room-${currentRoomId}`), update);
+}
 
         rpsChoices.addEventListener('click', (e) => {
             const choice = e.target.closest('.rps-choice')?.dataset.choice;
