@@ -115,10 +115,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, collection, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- Firebase Initialization ---
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig = JSON.parse(window.__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -209,7 +209,7 @@
                     } else {
                         const newRoomData = {
                             ...roomData,
-                             players: newPlayers.length === 1 ? [newPlayers[0], null] : [],
+                            players: newPlayers.length === 1 ? [newPlayers[0], null] : [null, null],
                             playerCount: newPlayers.length,
                             status: 'waiting'
                         };
@@ -319,11 +319,16 @@
             const roomRef = doc(db, roomsCollectionPath, `room-${roomId}`);
             gameUnsubscribe = onSnapshot(roomRef, (doc) => {
                 if (doc.exists()) {
+                    const oldStatus = gameState?.status;
                     gameState = doc.data();
                     if (myPlayerIndex === null) {
                         myPlayerIndex = gameState.players.findIndex(p => p && p.id === userId);
                     }
                     updateGameUI();
+                    
+                    if (oldStatus === 'results' && gameState.status === 'betting') {
+                        // This check is implicitly handled by the new transaction logic.
+                    }
                 } else {
                     showNotification("Chủ phòng đã rời đi. Quay về sảnh chờ.");
                     goToLobby();
@@ -381,8 +386,6 @@
                 case 'rolling': handleRollingUI(); break;
                 case 'results': handleResultUI(me); break;
             }
-
-            checkAndResetForRematch();
         }
         
         function handleRPSUI(me, opponent) {
@@ -392,7 +395,7 @@
              rpsChoices.classList.remove('hidden');
              const rpsMap = { r: 'Búa ✊', p: 'Bao ✋', s: 'Kéo ✂️' };
 
-             if (me.rpsChoice && opponent?.rpsChoice) {
+             if (me?.rpsChoice && opponent?.rpsChoice) {
                  rpsChoices.classList.add('hidden');
                  const winnerId = determineRPSWinner();
                  if (winnerId === -1) {
@@ -407,7 +410,7 @@
                      if (myPlayerIndex === winnerId) continueBtn.classList.remove('hidden');
                      else gameStatus.textContent = `Đang chờ ${winnerName} tiếp tục...`;
                  }
-             } else if (me.rpsChoice) {
+             } else if (me?.rpsChoice) {
                  gameStatus.textContent = `Đã chọn. Đang chờ ${opponent?.name || 'đối thủ'}...`;
                  rpsChoices.classList.add('hidden');
              } else {
@@ -453,7 +456,7 @@
             else if (winnerId === -1) winnerText.textContent = 'Cả hai người chơi đều đoán trúng! Mỗi người 1 điểm.';
             else winnerText.textContent = `${gameState.players[winnerId]?.name || 'Người chơi'} đã thắng vòng này và được 1 điểm!`;
 
-            if (me.wantsRematch) {
+            if (me?.wantsRematch) {
                 playAgainBtn.textContent = 'Đang chờ đối thủ...';
                 playAgainBtn.disabled = true;
             } else {
@@ -487,7 +490,7 @@
              const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
              if (winner === -1) {
                  if (myPlayerIndex === 0) {
-                    await updateDoc(roomRef, { 'players.0.rpsChoice': null, 'players.1.rpsChoice': null });
+                     await updateDoc(roomRef, { 'players.0.rpsChoice': null, 'players.1.rpsChoice': null });
                  }
              } else {
                  if (myPlayerIndex === winner) {
@@ -551,62 +554,58 @@
             }
         }
         
+        // This button click now only signals the player's intent to play again.
         playAgainBtn.addEventListener('click', async () => {
-            await updatePlayerState('wantsRematch', true);
+            if(gameState.status === 'results') {
+                await updatePlayerState('wantsRematch', true);
+            }
         });
         
-      async function checkAndResetForRematch() {
-    if (
-        gameState.status === 'results' &&
-        gameState.players[0]?.wantsRematch &&
-        gameState.players[1]?.wantsRematch &&
-        myPlayerIndex === 0
-    ) {
-        const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
-        try {
-            await runTransaction(db, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-                if (!roomDoc.exists()) return;
+        // The actual game reset logic is now handled exclusively by the host (player 0) within a secure transaction.
+        // This is triggered by the onSnapshot listener when it detects both players want a rematch.
+        async function checkAndResetForRematch() {
+            if (
+                gameState.status === 'results' &&
+                gameState.players[0]?.wantsRematch &&
+                gameState.players[1]?.wantsRematch &&
+                myPlayerIndex === 0
+            ) {
+                const roomRef = doc(db, roomsCollectionPath, `room-${currentRoomId}`);
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const roomDoc = await transaction.get(roomRef);
+                        if (!roomDoc.exists()) return;
 
-                const roomData = roomDoc.data();
+                        const roomData = roomDoc.data();
+                        
+                        // Double-check the conditions inside the transaction to prevent race conditions
+                        if (roomData.status !== 'results' || !roomData.players[0]?.wantsRematch || !roomData.players[1]?.wantsRematch) {
+                            return;
+                        }
+                        
+                        const nextTurn = roomData.roundWinner !== null && roomData.roundWinner !== -1 ? roomData.roundWinner : roomData.rpsWinner;
 
-                if (roomData.status !== 'results' || !roomData.players[0]?.wantsRematch || !roomData.players[1]?.wantsRematch) {
-                    return;
+                        // Simply reset the necessary fields, keeping the core player data (id, name, score) intact.
+                        transaction.update(roomRef, {
+                            status: 'betting',
+                            turn: nextTurn,
+                            rpsWinner: nextTurn,
+                            diceResult: null,
+                            roundWinner: null,
+                            diceFaces: null,
+                            'players.0.bet': null,
+                            'players.0.wantsRematch': false,
+                            'players.0.rpsChoice': null,
+                            'players.1.bet': null,
+                            'players.1.wantsRematch': false,
+                            'players.1.rpsChoice': null,
+                        });
+                    });
+                } catch (e) {
+                    console.error("Giao dịch chơi lại thất bại: ", e);
                 }
-
-                const p1 = roomData.players[0];
-                const p2 = roomData.players[1];
-
-                if (!p1 || !p2 || typeof p1.name === 'undefined' || typeof p2.name === 'undefined') {
-                    console.error("Dữ liệu người chơi không hợp lệ, không thể chơi lại.");
-                    return;
-                }
-
-                const nextTurn = roomData.roundWinner !== null && roomData.roundWinner !== -1 ? roomData.roundWinner : roomData.rpsWinner;
-
-                // SỬA Ở ĐÂY!
-           const newPlayers = [
-    { ...p1, rpsChoice: null, bet: null, wantsRematch: false, name: p1.name },
-    { ...p2, rpsChoice: null, bet: null, wantsRematch: false, name: p2.name }
-];
-                newPlayers[0].score = Number.isFinite(p1.score) ? p1.score : 0;
-                newPlayers[1].score = Number.isFinite(p2.score) ? p2.score : 0;
-
-                transaction.update(roomRef, {
-                    status: 'betting',
-                    turn: nextTurn,
-                    rpsWinner: nextTurn,
-                    diceResult: null,
-                    roundWinner: null,
-                    diceFaces: null,
-                    players: newPlayers
-                });
-            });
-        } catch (e) {
-            console.error("Giao dịch chơi lại thất bại: ", e);
+            }
         }
-    }
-}
 
         function renderBettingBoard() {
              const board = document.getElementById('betting-board');
@@ -620,10 +619,10 @@
                  circle.textContent = i;
                  let opponentBet = opponent?.bet;
                  let classes = 'bet-circle w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold border-4 transition ';
-                 if (i === me.bet) classes += 'selected-by-me ';
+                 if (i === me?.bet) classes += 'selected-by-me ';
                  else if (i === opponentBet) classes += 'selected-by-opponent ';
                  else classes += 'bg-white border-gray-300 ';
-                 if (myTurn && !me.bet && i !== opponentBet) {
+                 if (myTurn && !me?.bet && i !== opponentBet) {
                      classes += 'hover:bg-blue-200 cursor-pointer';
                      circle.disabled = false;
                  } else {
