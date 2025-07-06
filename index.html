@@ -5,12 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game: Hiệu Hai Xúc Xắc</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- *** THAY ĐỔI: Thêm font chữ Lora *** -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+        /* *** THAY ĐỔI: Thêm lớp cho font chữ Lora *** */
+        .font-lora {
+            font-family: 'Lora', serif;
         }
         .dice-container {
             perspective: 1200px;
@@ -26,9 +31,9 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 2px solid #4b5563;
+            border: 2px solid #6b7280;
             border-radius: 10px;
-            background-color: #f9fafb;
+            background-color: #f9fafb; 
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             box-sizing: border-box;
@@ -45,6 +50,15 @@
             border-radius: 50%; 
             background-color: #1f2937; 
         }
+
+        #welcome-screen .dice-face {
+            background-color: rgba(255, 255, 255, 0.85);
+            border-color: #a0aec0;
+        }
+        #welcome-screen .dot {
+            background-color: #4a5568;
+        }
+
 
         /* Dot placements for each face */
         .face-1 .dot:nth-child(1) { grid-column: 2; grid-row: 2; }
@@ -81,12 +95,74 @@
             transform: scale(1.05); 
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); 
         }
+
+        /* Animation for fade-in effect */
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 1s ease-out forwards;
+        }
+
+        /* Animation for decorative dice */
+        @keyframes spin-and-float {
+            0% {
+                transform: translateZ(-40px) translateY(0) rotateX(0) rotateY(0);
+            }
+            50% {
+                transform: translateZ(-40px) translateY(-20px) rotateX(180deg) rotateY(180deg);
+            }
+            100% {
+                transform: translateZ(-40px) translateY(0) rotateX(360deg) rotateY(360deg);
+            }
+        }
+        #deco-dice-1 {
+            animation: spin-and-float 15s ease-in-out infinite;
+        }
+        #deco-dice-2 {
+            animation: spin-and-float 20s ease-in-out infinite reverse;
+        }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- Welcome Screen (Initially Visible) -->
+    <div id="welcome-screen" class="fixed inset-0 bg-gradient-to-b from-purple-200 via-pink-200 to-cyan-200 p-6 text-center flex flex-col items-center justify-center z-50 overflow-hidden">
+        <!-- Decorative Dice -->
+        <div class="absolute top-10 left-4 sm:top-16 sm:left-24 lg:left-1/4 opacity-30 transform scale-75">
+            <div class="dice-container">
+                <div id="deco-dice-1" class="dice"></div>
+            </div>
+        </div>
+        <div class="absolute bottom-10 right-4 sm:bottom-16 sm:right-24 lg:right-1/4 opacity-30 transform scale-75">
+            <div class="dice-container">
+                <div id="deco-dice-2" class="dice"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="relative z-10 animate-fade-in-up">
+            <!-- *** THAY ĐỔI: Áp dụng font Lora *** -->
+            <h1 class="text-gray-800 mb-8 drop-shadow-lg font-lora">
+                <span class="block text-3xl md:text-4xl font-normal">Chào mừng bạn đến với trò chơi</span>
+                <span class="block font-bold text-5xl md:text-6xl mt-2">Hiệu hai xúc xắc</span>
+            </h1>
+            <button id="start-game-btn" class="bg-indigo-600 text-white font-bold py-4 px-10 rounded-lg text-2xl transition-all duration-300 transform hover:scale-110 shadow-lg hover:shadow-2xl">
+                Bắt đầu
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Game Screen (Initially Hidden) -->
+    <div id="game-screen" class="w-full max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hidden min-h-screen sm:min-h-0 sm:my-4">
         
-        <!-- *** THAY ĐỔI: Sửa lỗi bố cục trên di động *** -->
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
             <!-- Title Block -->
@@ -153,9 +229,34 @@
             </div>
         </div>
     </div>
+    
+    <!-- Rules Popup (Initially Hidden) -->
+    <div id="rules-popup" class="hidden fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full animate-fade-in-up">
+            <h2 class="text-3xl font-bold text-center mb-4 text-indigo-600 dark:text-indigo-400">Luật chơi</h2>
+            <ul class="list-disc list-inside space-y-3 text-lg text-gray-700 dark:text-gray-300 mb-6">
+                <li>Bạn sẽ chọn một trong hai nguyện vọng: <strong>NHỎ</strong> (hiệu của hai xúc xắc là 0, 1, hoặc 2) hoặc <strong>LỚN</strong> (hiệu là 3, 4, hoặc 5).</li>
+                <li>Nhấn nút "Tung Xúc Xắc" để xem kết quả.</li>
+                <li>Nếu kết quả trùng với nguyện vọng của bạn, bạn được <strong>1 điểm</strong>. Ngược lại, máy sẽ được 1 điểm.</li>
+            </ul>
+            <button id="close-rules-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">
+                Đã hiểu
+            </button>
+        </div>
+    </div>
+
 
     <script>
-        // --- DOM Elements ---
+        // --- DOM Elements for Flow Control ---
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const gameScreen = document.getElementById('game-screen');
+        const rulesPopup = document.getElementById('rules-popup');
+        const closeRulesBtn = document.getElementById('close-rules-btn');
+        const decoDice1 = document.getElementById('deco-dice-1');
+        const decoDice2 = document.getElementById('deco-dice-2');
+
+        // --- DOM Elements for Game ---
         const betSmallBtn = document.getElementById('bet-small-btn');
         const betLargeBtn = document.getElementById('bet-large-btn');
         const rollBtn = document.getElementById('roll-btn');
@@ -169,6 +270,19 @@
 
         // --- Game State ---
         let playerBet = null, history = [], playerScore = 0, computerScore = 0, isRolling = false;
+        
+        // --- Event Listeners for Flow Control ---
+        startGameBtn.addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            rulesPopup.classList.remove('hidden');
+            rulesPopup.classList.add('flex');
+        });
+
+        closeRulesBtn.addEventListener('click', () => {
+            rulesPopup.classList.add('hidden');
+            rulesPopup.classList.remove('flex');
+        });
         
         function getDiceHTML() {
             let facesHTML = '';
@@ -195,8 +309,15 @@
             dice1El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
             dice2El.style.transform = `translateZ(-40px) ${diceRotations[1]}`;
         }
+        
+        function setupDecoDice() {
+            if (decoDice1 && decoDice2) {
+                decoDice1.innerHTML = getDiceHTML();
+                decoDice2.innerHTML = getDiceHTML();
+            }
+        }
 
-        // --- Event Listeners ---
+        // --- Event Listeners for Game ---
         betSmallBtn.addEventListener('click', () => selectBet('small'));
         betLargeBtn.addEventListener('click', () => selectBet('large'));
         rollBtn.addEventListener('click', handleRoll);
@@ -318,7 +439,9 @@
             setupDice();
         }
 
+        // --- Initial Game Setup ---
         setupDice();
+        setupDecoDice();
     </script>
 </body>
 </html>
